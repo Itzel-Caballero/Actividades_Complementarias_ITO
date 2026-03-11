@@ -17,7 +17,7 @@
                         @endcan
             
                         <table class="table table-striped mt-2">
-                                <thead style="background-color:#6777ef">                                     
+                                <thead style="background-color:#4e38a4">                                     
                                     <th style="display: none;">ID</th>
                                     <th style="color:#fff;">Titulo</th>
                                     <th style="color:#fff;">Contenido</th>                                    

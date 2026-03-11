@@ -17,7 +17,7 @@
     <link href="{{ asset('assets/css/select2.min.css') }}" rel="stylesheet" type="text/css"/>
 </head>
 
-<body>
+<body style="background: url('{{ asset('img/gustavorezende-cube-14564.gif') }}') center center / cover no-repeat fixed; min-height: 100vh;">
 <div id="app">
     <section class="section">
         <div class="container mt-5">

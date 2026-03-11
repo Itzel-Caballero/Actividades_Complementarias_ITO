@@ -16,16 +16,18 @@ Auth::routes();
 // ─── Dashboards por rol (protegidos con auth) ─────────────────────────────
 Route::middleware(['auth'])->group(function () {
 
+    Route::get('/home', [HomeController::class, 'index'])->name('home');
+
     Route::get('/alumno/dashboard', function () {
-        return view('home'); // reemplaza con tu vista de alumno cuando la tengas
+        return view('home');
     })->name('alumno.dashboard');
 
     Route::get('/instructor/dashboard', function () {
-        return view('home'); // reemplaza con tu vista de instructor cuando la tengas
+        return view('home');
     })->name('instructor.dashboard');
 
     Route::get('/admin/dashboard', function () {
-        return view('home'); // reemplaza con tu vista de admin cuando la tengas
+        return view('home');
     })->name('admin.dashboard');
 
     // Rutas existentes del proyecto

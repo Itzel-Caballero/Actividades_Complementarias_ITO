@@ -17,7 +17,7 @@
         
                 
                             <table class="table table-striped mt-2">
-                                <thead style="background-color:#6777ef">                                                       
+                                <thead style="background-color:#4e38a4">                                                       
                                     <th style="color:#fff;">Rol</th>
                                     <th style="color:#fff;">Acciones</th>
                                 </thead>  

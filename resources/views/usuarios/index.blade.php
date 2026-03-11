@@ -27,7 +27,7 @@
                          
             
                             <table class="table table-striped mt-2 table_id" id="miTabla">
-                              <thead style="background-color:#6777ef">                                     
+                              <thead style="background-color:#4e38a4">                                     
                                   <th style="display: none;">ID</th>
                                   <th style="color:#fff;">Nombre</th>
                                   <th style="color:#fff;">E-mail</th>
@@ -37,21 +37,21 @@
                               <tbody>
                                 @foreach ($usuarios as $usuario)
                                   <tr>
-                                    <td style="display: none;">{{ $usuario->id }}</td>
-                                    <td>{{ $usuario->name }}</td>
+                                    <td style="display: none;">{{ $usuario->id_usuario }}</td>
+                                    <td>{{ $usuario->nombre }}</td>
                                     <td>{{ $usuario->email }}</td>
                                     <td>
                                       @if(!empty($usuario->getRoleNames()))
-                                        @foreach($usuario->getRoleNames() as $rolNombre)                                       
+                                        @foreach($usuario->getRoleNames() as $rolNombre)
                                           <h5><span class="badge badge-dark">{{ $rolNombre }}</span></h5>
                                         @endforeach
                                       @endif
                                     </td>
 
-                                    <td>                                  
-                                      <a class="btn btn-info" href="{{ route('usuarios.edit',$usuario->id) }}">Editar</a>
+                                    <td>
+                                      <a class="btn btn-info" href="{{ route('usuarios.edit',$usuario->id_usuario) }}">Editar</a>
 
-                                      {!! Form::open(['method' => 'DELETE','route' => ['usuarios.destroy', $usuario->id],'style'=>'display:inline']) !!}
+                                      {!! Form::open(['method' => 'DELETE','route' => ['usuarios.destroy', $usuario->id_usuario],'style'=>'display:inline']) !!}
                                           {!! Form::submit('Borrar', ['class' => 'btn btn-danger']) !!}
                                       {!! Form::close() !!}
                                     </td>
@@ -80,12 +80,9 @@
         [2, 5, 10]
     ],
 
-    columns: [
-        { Id: 'Id' },
-        { Nombre: 'Nombre' },
-        { Email: 'E-mail' },
-        { Rol: 'Rol' },
-        { Acciones: 'Acciones' }
+    columnDefs: [
+        { targets: 0, visible: false },
+        { targets: 4, orderable: false }
     ],
 
     language: {
