@@ -6,6 +6,20 @@
 <ul class="navbar-nav navbar-right">
 
     @if(\Illuminate\Support\Facades\Auth::user())
+        <li class="nav-item dropdown mr-2">
+            <a href="#" class="nav-link nav-link-lg" data-toggle="dropdown" id="notificacionesDropdown">
+                <i class="fas fa-bell" style="font-size:1.2rem;"></i>
+            </a>
+            <div class="dropdown-menu dropdown-menu-right" style="min-width:280px;" aria-labelledby="notificacionesDropdown">
+                <div class="dropdown-title">Notificaciones</div>
+                <div class="dropdown-item text-center text-muted py-3">
+                    <i class="fas fa-bell-slash mr-1"></i> Sin notificaciones nuevas
+                </div>
+            </div>
+        </li>
+    @endif
+
+    @if(\Illuminate\Support\Facades\Auth::user())
         <li class="dropdown">
             <a href="#" data-toggle="dropdown"
                class="nav-link dropdown-toggle nav-link-lg nav-link-user">
