@@ -9,7 +9,7 @@ use App\Http\Controllers\ActividadComplementariaController;
 use App\Http\Controllers\InscripcionController;
 
 Route::get('/', function () {
-    return view('welcome');
+    return view('/auth/login');
 });
 
 // Rutas de autenticación de Laravel (login, register, password reset, etc.)

@@ -8,7 +8,7 @@
     <a class="nav-link" href="/roles">
         <i class=" fas fa-user-lock"></i><span>Roles</span>
     </a>
-    <a class="nav-link" href="/blogs">
-        <i class=" fas fa-blog"></i><span>Blogs</span>
+    <a class="nav-link" href="/actividades">
+        <i class=" fas fa-blog"></i><span>Actividades</span>
     </a>
 </li>
