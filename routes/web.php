@@ -8,6 +8,7 @@ use App\Http\Controllers\BlogController;
 use App\Http\Controllers\ActividadComplementariaController;
 use App\Http\Controllers\InscripcionController;
 
+
 Route::get('/', function () {
     return view('welcome');
 });
@@ -53,4 +54,8 @@ Route::middleware(['auth'])->group(function () {
 
     Route::resource('actividades', ActividadComplementariaController::class);
     Route::post('/inscripciones', [InscripcionController::class, 'store'])->name('inscripciones.store');
-});
+
+    Route::post('/inscripciones', [InscripcionController::class, 'store'])->name('inscripciones.store');
+    Route::get('/mis-inscripciones', [InscripcionController::class, 'index'])->name('inscripciones.index');
+
+    });

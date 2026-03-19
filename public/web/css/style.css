@@ -1719,9 +1719,9 @@ h6 .badge {
 }
 
 .btn-success, .btn-success.disabled {
-    box-shadow: 0 2px 6px #81d694;
-    background-color: #47c363;
-    border-color: #47c363;
+    box-shadow: 0 2px 6px #a781d6;
+    background-color: #8f47c3;
+    border-color: #a247c3;
     color: #fff;
 }
 

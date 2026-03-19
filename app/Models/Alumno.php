@@ -9,7 +9,7 @@ class Alumno extends Model
     protected $primaryKey = 'id_alumno';
 
     protected $fillable = [
-        'id_carrera', 'semestre_cursando', 'creditos_acumulados',
+        'id_alumno',  'id_carrera', 'semestre_cursando', 'creditos_acumulados',
     ];
 
     public function usuario()

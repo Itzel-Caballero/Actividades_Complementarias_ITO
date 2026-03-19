@@ -85,18 +85,29 @@
                                             <strong>Cupo</strong><br>
                                             <span class="h4">{{ $grupo->cupo_ocupado }}/{{ $grupo->cupo_maximo }}</span>
                                         </p>
-                                        @if ($grupo->cupo_ocupado < $grupo->cupo_maximo)
-                                            <form action="{{ route('inscripciones.store') }}" method="POST">
-                                                @csrf
-                                                <input type="hidden" name="id_grupo" value="{{ $grupo->id_grupo }}">
-                                                <button type="submit" class="btn btn-success btn-sm"
-                                                    onclick="return confirm('¿Confirmas tu inscripción a este grupo?')">
-                                                    <i class="fa fa-check"></i> Inscribirme
-                                                </button>
-                                            </form>
-                                        @else
-                                            <span class="badge badge-danger">Cupo lleno</span>
-                                        @endif
+
+                                        @php
+    $alumno = auth()->user() ? \App\Models\Alumno::where('id_alumno', auth()->user()->id)->first() : null;
+    $yaInscrito = $alumno ? \App\Models\Inscripcion::where('id_alumno', $alumno->id_alumno)->where('id_grupo', $grupo->id_grupo)->exists() : false;
+@endphp
+
+@if ($yaInscrito)
+    <span class="btn btn-success btn-sm disabled">
+        <i class="fa fa-check"></i> Inscrito
+    </span>
+@elseif ($grupo->cupo_ocupado < $grupo->cupo_maximo)
+    <form action="{{ route('inscripciones.store') }}" method="POST">
+        @csrf
+        <input type="hidden" name="id_grupo" value="{{ $grupo->id_grupo }}">
+        <button type="submit" class="btn btn-primary btn-sm"
+            onclick="return confirm('¿Confirmas tu inscripción a este grupo?')">
+            <i class="fa fa-check"></i> Inscribirme
+        </button>
+    </form>
+@else
+    <span class="btn btn-secondary btn-sm disabled">Sin cupo</span>
+@endif
+                                        
                                     </div>
                                 </div>
                             </div>
