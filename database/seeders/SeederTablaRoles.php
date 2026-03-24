@@ -24,3 +24,11 @@ class SeederTablaRoles extends Seeder
         $alumno->givePermissionTo(['ver-blog']);
     }
 }
+
+        // Admin tiene todos los permisos
+        // Admin tiene todos los permisos
+        // Admin tiene todos los permisos
+        // Admin tiene todos los permisos
+        // Admin tiene todos los permisosv
+        // Admin tiene todos los permisos
+        // Admin tiene todos los permisosvv
