@@ -7,6 +7,7 @@ use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\ActividadComplementariaController;
 use App\Http\Controllers\InscripcionController;
+use App\Http\Controllers\PerfilController;
 
 
 Route::get('/', function () {
@@ -53,9 +54,11 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('blogs',    BlogController::class);
 
     Route::resource('actividades', ActividadComplementariaController::class);
-    Route::post('/inscripciones', [InscripcionController::class, 'store'])->name('inscripciones.store');
+    Route::post('/perfil/actualizar', [PerfilController::class, 'update'])->name('perfil.update');
 
     Route::post('/inscripciones', [InscripcionController::class, 'store'])->name('inscripciones.store');
     Route::get('/mis-inscripciones', [InscripcionController::class, 'index'])->name('inscripciones.index');
+    Route::post('/inscripciones/{inscripcion}/baja', [InscripcionController::class, 'darBaja'])->name('inscripciones.baja');
+
 
     });

@@ -76,6 +76,7 @@
 <script>
     let loggedInUser =@json(\Illuminate\Support\Facades\Auth::user());
     let loginUrl = '{{ route('login') }}';
+    let perfilUpdateUrl = '{{ route('perfil.update') }}';
     // Loading button plugin (removed from BS4)
     (function ($) {
         $.fn.button = function (action) {

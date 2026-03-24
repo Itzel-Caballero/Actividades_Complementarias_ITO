@@ -25,7 +25,7 @@ class CreateActividadComplementariaTable extends Migration
         $table->integer('creditos');
         $table->timestamps();
 
-        $table->foreign('id_departamento')->references('id_departamento')->on('DEPARTAMENTO');
+        $table->foreign('id_departamento')->references('id_departamento')->on('departamento');
     });
 }
 

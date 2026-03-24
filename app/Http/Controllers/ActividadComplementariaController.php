@@ -5,6 +5,8 @@ use Illuminate\Http\Request;
 use App\Models\ActividadComplementaria;
 use App\Models\Departamento;
 use App\Models\Carrera;
+use App\Models\Alumno;
+use App\Models\Inscripcion;
 
 class ActividadComplementariaController extends Controller
 {
@@ -20,7 +22,18 @@ class ActividadComplementariaController extends Controller
         $actividades = ActividadComplementaria::with(['departamento', 'grupos', 'carreras'])
             ->where('disponible', true)
             ->paginate(9);
-        return view('actividades.index', compact('actividades'));
+
+        // Verificar si el alumno ya tiene una inscripción activa
+        $inscripcionActiva = null;
+        $alumno = Alumno::where('id_alumno', auth()->id())->first();
+        if ($alumno) {
+            $inscripcionActiva = Inscripcion::with('grupo.actividad')
+                ->where('id_alumno', $alumno->id_alumno)
+                ->whereIn('estatus', ['inscrito', 'cursando'])
+                ->first();
+        }
+
+        return view('actividades.index', compact('actividades', 'inscripcionActiva'));
     }
 
     public function show($id)

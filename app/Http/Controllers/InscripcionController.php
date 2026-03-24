@@ -5,19 +5,72 @@ use Illuminate\Http\Request;
 use App\Models\Inscripcion;
 use App\Models\Alumno;
 use App\Models\Grupo;
+use App\Models\ActividadComplementaria;
 
 class InscripcionController extends Controller
 {
+    public function index()
+    {
+        $user   = auth()->user();
+        $alumno = Alumno::where('id_alumno', $user->id)->first();
+
+        if (!$alumno) {
+            return redirect()->route('actividades.index')
+                ->with('error', 'No tienes un perfil de alumno.');
+        }
+
+        // Inscripción activa actual (inscrito o cursando)
+        $inscripcionActiva = Inscripcion::with([
+            'grupo.actividad',
+            'grupo.horarios.dia',
+            'grupo.ubicacion',
+        ])->where('id_alumno', $alumno->id_alumno)
+          ->whereIn('estatus', ['inscrito', 'cursando'])
+          ->first();
+
+        // Historial (aprobado, reprobado, dado_de_baja)
+        $historial = Inscripcion::with([
+            'grupo.actividad',
+        ])->where('id_alumno', $alumno->id_alumno)
+          ->whereIn('estatus', ['aprobado', 'reprobado', 'dado_de_baja'])
+          ->orderByDesc('updated_at')
+          ->get();
+
+        // Otras actividades disponibles (solo si YA tiene inscripción activa, para ver opciones de cambio)
+        $otrasActividades = null;
+        if ($inscripcionActiva) {
+            $otrasActividades = ActividadComplementaria::with(['departamento', 'grupos'])
+                ->where('disponible', true)
+                ->where('id_actividad', '!=', $inscripcionActiva->grupo->id_actividad)
+                ->paginate(6);
+        }
+
+        return view('inscripciones.index', compact(
+            'alumno',
+            'inscripcionActiva',
+            'historial',
+            'otrasActividades'
+        ));
+    }
+
     public function store(Request $request)
     {
-        $user = auth()->user();
-
-        // Verificar que el usuario es alumno
+        $user   = auth()->user();
         $alumno = Alumno::where('id_alumno', $user->id)->first();
 
         if (!$alumno) {
             return redirect()->back()
                 ->with('error', 'Solo los alumnos pueden inscribirse a actividades.');
+        }
+
+        // Verificar que NO tenga ya una inscripción activa
+        $inscripcionActiva = Inscripcion::where('id_alumno', $alumno->id_alumno)
+            ->whereIn('estatus', ['inscrito', 'cursando'])
+            ->exists();
+
+        if ($inscripcionActiva) {
+            return redirect()->back()
+                ->with('error', 'Ya tienes una actividad complementaria activa. Debes darte de baja antes de inscribirte a otra.');
         }
 
         $grupo = Grupo::findOrFail($request->id_grupo);
@@ -28,14 +81,14 @@ class InscripcionController extends Controller
                 ->with('error', 'El grupo ya no tiene cupo disponible.');
         }
 
-        // Verificar que no esté ya inscrito
+        // Verificar que no esté ya inscrito en ese grupo específico
         $yaInscrito = Inscripcion::where('id_alumno', $alumno->id_alumno)
             ->where('id_grupo', $grupo->id_grupo)
             ->exists();
 
         if ($yaInscrito) {
             return redirect()->back()
-                ->with('error', 'Ya estás inscrito en este grupo.');
+                ->with('error', 'Ya estuviste inscrito en este grupo.');
         }
 
         // Crear inscripción
@@ -46,29 +99,34 @@ class InscripcionController extends Controller
             'estatus'           => 'inscrito',
         ]);
 
-        // Actualizar cupo ocupado
         $grupo->increment('cupo_ocupado');
 
-        return redirect()->back()
-            ->with('success', '¡Inscripción exitosa! Ahora estás inscrito en este grupo.');
+        return redirect()->route('inscripciones.index')
+            ->with('success', '¡Inscripción exitosa! Ahora estás inscrito en el grupo ' . $grupo->grupo . '.');
     }
 
-    public function index()
+public function darBaja(Inscripcion $inscripcion)
     {
-        $user    = auth()->user();
-        $alumno  = Alumno::where('id_alumno', $user->id)->first();
+        $user   = auth()->user();
+        $alumno = Alumno::where('id_alumno', $user->id)->first();
 
-        if (!$alumno) {
-            return redirect()->route('actividades.index')
-                ->with('error', 'No tienes un perfil de alumno.');
+        // Verificar que la inscripción pertenece al alumno
+        if (!$alumno || $inscripcion->id_alumno !== $alumno->id_alumno) {
+            return redirect()->back()
+                ->with('error', 'No tienes permiso para realizar esta acción.');
         }
 
-        $inscripciones = Inscripcion::with([
-            'grupo.actividad',
-            'grupo.horarios.dia',
-            'grupo.ubicacion',
-        ])->where('id_alumno', $alumno->id_alumno)->get();
+        // Solo se puede dar de baja si está inscrito o cursando
+        if (!in_array($inscripcion->estatus, ['inscrito', 'cursando'])) {
+            return redirect()->back()
+                ->with('error', 'No puedes darte de baja de esta inscripción.');
+        }
 
-        return view('inscripciones.index', compact('inscripciones', 'alumno'));
+        // Cambiar estatus y liberar cupo
+        $inscripcion->update(['estatus' => 'dado_de_baja']);
+        $inscripcion->grupo->decrement('cupo_ocupado');
+
+        return redirect()->route('inscripciones.index')
+            ->with('success', 'Te has dado de baja correctamente. Ahora puedes inscribirte a otra actividad.');
     }
 }

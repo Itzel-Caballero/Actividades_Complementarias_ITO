@@ -45,27 +45,30 @@ window.displayPhoto = function (input, selector) {
 
 $(document).on('submit', '#editProfileForm', function (event) {
   event.preventDefault();
-  var userId = $('#editProfileUserId').val();
   var loadingButton = jQuery(this).find('#btnPrEditSave');
   loadingButton.button('loading');
   $.ajax({
-    url: usersUrl + '/' + userId,
-    type: 'post',
+    url: perfilUpdateUrl,
+    type: 'POST',
     data: new FormData($(this)[0]),
     processData: false,
     contentType: false,
-    success: function success(result) {
+    headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+    success: function (result) {
       if (result.success) {
         $('#EditProfileModal').modal('hide');
-        setTimeout(function () {
-          location.reload();
-        }, 1500);
+        setTimeout(function () { location.reload(); }, 800);
       }
     },
-    error: function error(result) {
-      console.log(result);
+    error: function (xhr) {
+      loadingButton.button('reset');
+      if (xhr.status === 422) {
+        var errors = xhr.responseJSON.errors;
+        var msg = Object.values(errors).flat().join('<br>');
+        $('#editProfileValidationErrorsBox').html(msg).removeClass('d-none');
+      }
     },
-    complete: function complete() {
+    complete: function () {
       loadingButton.button('reset');
     }
   });

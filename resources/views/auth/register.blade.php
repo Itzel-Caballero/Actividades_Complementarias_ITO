@@ -28,7 +28,7 @@
                     <div class="col-md-12">
                         <div class="form-group">
                             <label>Tipo de Usuario <span class="text-danger">*</span></label>
-                            <select name="tipo_usuario"
+                            <select name="tipo_usuario" id="tipo_usuario"
                                     class="form-control{{ $errors->has('tipo_usuario') ? ' is-invalid' : '' }}">
                                 <option value="">-- Selecciona --</option>
                                 <option value="alumno"     {{ old('tipo_usuario') == 'alumno'     ? 'selected' : '' }}>Alumno</option>
@@ -36,6 +36,24 @@
                                 <option value="admin"      {{ old('tipo_usuario') == 'admin'      ? 'selected' : '' }}>Administrador</option>
                             </select>
                             <div class="invalid-feedback">{{ $errors->first('tipo_usuario') }}</div>
+                        </div>
+                    </div>
+
+                    {{-- Carrera (solo para alumnos) --}}
+                    <div class="col-md-12" id="campo_carrera" style="display:none;">
+                        <div class="form-group">
+                            <label><i class="fas fa-graduation-cap"></i> Carrera <span class="text-danger">*</span></label>
+                            <select name="id_carrera"
+                                    class="form-control{{ $errors->has('id_carrera') ? ' is-invalid' : '' }}">
+                                <option value="">-- Selecciona tu carrera --</option>
+                                @foreach ($carreras as $carrera)
+                                    <option value="{{ $carrera->id_carrera }}"
+                                        {{ old('id_carrera') == $carrera->id_carrera ? 'selected' : '' }}>
+                                        {{ $carrera->nombre }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <div class="invalid-feedback">{{ $errors->first('id_carrera') }}</div>
                         </div>
                     </div>
 
@@ -138,4 +156,19 @@
     <div class="mt-5 text-muted text-center">
         ¿Ya tienes cuenta? <a href="{{ route('login') }}">Inicia sesión aquí</a>
     </div>
+
+    <script>
+        // Mostrar/ocultar carrera según tipo de usuario
+        document.getElementById('tipo_usuario').addEventListener('change', function () {
+            var campoCarrera = document.getElementById('campo_carrera');
+            campoCarrera.style.display = this.value === 'alumno' ? 'block' : 'none';
+        });
+        // Si hay error de validación y el tipo ya fue elegido, mantener visible
+        document.addEventListener('DOMContentLoaded', function () {
+            var tipo = document.getElementById('tipo_usuario').value;
+            if (tipo === 'alumno') {
+                document.getElementById('campo_carrera').style.display = 'block';
+            }
+        });
+    </script>
 @endsection

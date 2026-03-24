@@ -50,10 +50,25 @@ $(document).on('submit', '#editProfileForm', function (event) {
         contentType: false,
         success: function success(result) {
             if (result.success) {
-                $('#EditProfileModal').modal('hide');
-                setTimeout(function () {
-                    location.reload();
-                }, 1500);
+                // Si hay campo de carrera (alumno), guardarlo también
+                let idCarrera = $('#pfCarrera').val();
+                if (idCarrera) {
+                    $.ajax({
+                        url: '/perfil/carrera',
+                        type: 'POST',
+                        data: {
+                            id_carrera: idCarrera,
+                            _token: $('input[name="_token"]').first().val()
+                        },
+                        complete: function () {
+                            $('#EditProfileModal').modal('hide');
+                            setTimeout(function () { location.reload(); }, 1000);
+                        }
+                    });
+                } else {
+                    $('#EditProfileModal').modal('hide');
+                    setTimeout(function () { location.reload(); }, 1500);
+                }
             }
         },
         error: function error(result) {

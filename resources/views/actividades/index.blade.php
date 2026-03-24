@@ -7,6 +7,21 @@
     </div>
     <div class="section-body">
 
+        {{-- Banner: ya está inscrito en una actividad --}}
+        @if (!auth()->user()->hasRole('admin') && isset($inscripcionActiva) && $inscripcionActiva)
+            <div class="alert alert-warning d-flex align-items-center justify-content-between mb-3">
+                <div>
+                    <i class="fas fa-info-circle"></i>
+                    <strong>Ya estás inscrito</strong> en
+                    <strong>{{ $inscripcionActiva->grupo->actividad->nombre }}</strong>.
+                    Para inscribirte a otra actividad primero debes darte de baja.
+                </div>
+                <a href="{{ route('inscripciones.index') }}" class="btn btn-sm btn-warning ml-3">
+                    <i class="fas fa-clipboard-list"></i> Ver mi inscripción
+                </a>
+            </div>
+        @endif
+
         @if ($message = Session::get('success'))
             <div class="alert alert-success alert-dismissible fade show" role="alert">
                 <strong>{{ $message }}</strong>
