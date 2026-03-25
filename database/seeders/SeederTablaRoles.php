@@ -15,6 +15,7 @@ class SeederTablaRoles extends Seeder
         $alumno     = Role::create(['name' => 'alumno']);
 
         // Admin tiene todos los permisos
+          // Admin tiene todos los permis
         $admin->givePermissionTo(Permission::all());
 
         // Instructor solo puede ver blogs y roles
