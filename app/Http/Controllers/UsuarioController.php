@@ -1,5 +1,7 @@
 <?php
+
 namespace App\Http\Controllers;
+
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Models\User;
@@ -14,8 +16,23 @@ class UsuarioController extends Controller
 {
     public function index(Request $request)
     {
-        $usuarios = User::all();
-        return view('usuarios.index', compact('usuarios'));
+        // 1. Capturamos el texto de búsqueda
+        $buscar = trim($request->get('buscar'));
+
+        // 2. Realizamos la consulta con filtros y paginación
+        $usuarios = User::where(function($query) use ($buscar) {
+            if ($buscar) {
+                $query->where('nombre', 'LIKE', '%' . $buscar . '%')
+                      ->orWhere('apellido_paterno', 'LIKE', '%' . $buscar . '%')
+                      ->orWhere('email', 'LIKE', '%' . $buscar . '%')
+                      ->orWhere('num_control', 'LIKE', '%' . $buscar . '%');
+            }
+        })
+        ->orderBy('id', 'desc') // Mostrar los más recientes primero
+        ->paginate(3); // Paginar de 10 en 10
+
+        // 3. Retornamos la vista con los datos y el término de búsqueda
+        return view('usuarios.index', compact('usuarios', 'buscar'));
     }
 
     public function create()
@@ -25,6 +42,7 @@ class UsuarioController extends Controller
         return view('usuarios.crear', compact('roles', 'departamentos'));
     }
 
+<<<<<<< HEAD
     public function store(Request $request)
     {
         $rules = [
@@ -48,18 +66,34 @@ class UsuarioController extends Controller
         }
 
         $this->validate($request, $rules);
+=======
+   public function store(Request $request)
+{
+    $this->validate($request, [
+        'nombre'           => 'required',
+        'apellido_paterno' => 'required',
+        'email'            => 'required|email|unique:USUARIO,email',
+        'password'         => 'required|same:confirm-password',
+        'roles'            => 'required',
+        'num_control'      => 'required|numeric',
+        'tipo_usuario'     => 'required',
+        'id_carrera'       => 'required_if:tipo_usuario,alumno', // Obligatorio solo si es alumno
+    ]);
+>>>>>>> 6684bd81b35d346dfbc15d05ac3906f3469b852e
 
-        $user = User::create([
-            'nombre'           => $request->nombre,
-            'apellido_paterno' => $request->apellido_paterno,
-            'apellido_materno' => $request->apellido_materno,
-            'email'            => $request->email,
-            'contrasena'       => Hash::make($request->password),
-            'tipo_usuario'     => $request->tipo_usuario,
-            'num_control'      => $request->num_control,
-            'telefono'         => $request->telefono,
-        ]);
+    $user = User::create([
+        'nombre'           => $request->nombre,
+        'apellido_paterno' => $request->apellido_paterno,
+        'apellido_materno' => $request->apellido_materno,
+        'email'            => $request->email,
+        'contrasena'       => Hash::make($request->password),
+        'tipo_usuario'     => $request->tipo_usuario,
+        'num_control'      => $request->num_control,
+        'telefono'         => $request->telefono,
+        'id_carrera'       => $request->id_carrera, // <-- Agregamos esta línea
+    ]);
 
+<<<<<<< HEAD
         // Insertar en tabla específica según tipo
         if ($request->tipo_usuario === 'instructor') {
             Instructor::create([
@@ -84,10 +118,13 @@ class UsuarioController extends Controller
         } catch (\Exception $e) {
             \Log::error('assignRole error: ' . $e->getMessage());
         }
+=======
+    // ... resto del código de roles ...
+    $user->assignRole($request->input('roles'));
 
-        return redirect()->route('usuarios.index')
-                         ->with('success', 'Usuario creado correctamente.');
-    }
+    return redirect()->route('usuarios.index')->with('success', 'Usuario creado correctamente.');
+}
+>>>>>>> 6684bd81b35d346dfbc15d05ac3906f3469b852e
 
     public function show($id) {}
 
