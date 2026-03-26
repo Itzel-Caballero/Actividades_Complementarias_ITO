@@ -44,4 +44,9 @@ class User extends Authenticatable
     {
         return trim("{$this->nombre} {$this->apellido_paterno} {$this->apellido_materno}");
     }
+
+    public function instructor()
+    {
+        return $this->hasOne(\App\Models\Instructor::class, 'id_instructor', 'id');
+    }
 }

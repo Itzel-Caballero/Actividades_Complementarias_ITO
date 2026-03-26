@@ -7,12 +7,14 @@ class Instructor extends Model
 {
     protected $table      = 'instructor';
     protected $primaryKey = 'id_instructor';
+    public    $incrementing = false;  // la PK viene del id de USUARIO
 
-    protected $fillable = ['id_departamento', 'especialidad'];
+    protected $fillable = ['id_instructor', 'id_departamento', 'especialidad'];
 
     public function usuario()
     {
-        return $this->belongsTo(User::class, 'id_instructor');
+        // id_instructor de la tabla instructor = id de la tabla USUARIO
+        return $this->belongsTo(User::class, 'id_instructor', 'id');
     }
 
     public function departamento()

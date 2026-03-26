@@ -7,25 +7,44 @@ use App\Models\Departamento;
 use App\Models\Carrera;
 use App\Models\Alumno;
 use App\Models\Inscripcion;
+use App\Models\Grupo;
+use App\Models\Instructor;
 
 class ActividadComplementariaController extends Controller
 {
     public function index()
     {
-        // Admin ve tabla de gestión, alumno ve catálogo
-        if (auth()->user()->hasRole('admin')) {
+        $user = auth()->user();
+
+        // Admin ve tabla de gestión de actividades
+        if ($user->hasRole('admin')) {
             $actividades = ActividadComplementaria::with(['departamento', 'grupos', 'carreras'])
                 ->paginate(10);
             return view('actividades.admin_index', compact('actividades'));
         }
 
+        // Instructor ve solo los grupos que le corresponden
+        if ($user->hasRole('instructor')) {
+            $instructor = Instructor::where('id_instructor', $user->id)->first();
+
+            if (!$instructor) {
+                return view('actividades.instructor_grupos', ['grupos' => collect()]);
+            }
+
+            $grupos = Grupo::with(['actividad.departamento', 'ubicacion', 'horarios.dia', 'inscripciones'])
+                ->where('id_instructor', $instructor->id_instructor)
+                ->get();
+
+            return view('actividades.instructor_grupos', compact('grupos'));
+        }
+
+        // Alumno ve catálogo de actividades disponibles
         $actividades = ActividadComplementaria::with(['departamento', 'grupos', 'carreras'])
             ->where('disponible', true)
             ->paginate(9);
 
-        // Verificar si el alumno ya tiene una inscripción activa
         $inscripcionActiva = null;
-        $alumno = Alumno::where('id_alumno', auth()->id())->first();
+        $alumno = Alumno::where('id_alumno', $user->id)->first();
         if ($alumno) {
             $inscripcionActiva = Inscripcion::with('grupo.actividad')
                 ->where('id_alumno', $alumno->id_alumno)

@@ -17,9 +17,14 @@
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h4>Actividades Complementarias</h4>
-                <a href="{{ route('actividades.create') }}" class="btn btn-primary btn-sm">
-                    <i class="fa fa-plus"></i> Nueva Actividad
-                </a>
+                <div>
+                    <a href="{{ route('grupos.index') }}" class="btn btn-secondary btn-sm mr-2">
+                        <i class="fa fa-users"></i> Gestión de Grupos
+                    </a>
+                    <a href="{{ route('actividades.create') }}" class="btn btn-primary btn-sm">
+                        <i class="fa fa-plus"></i> Nueva Actividad
+                    </a>
+                </div>
             </div>
             <div class="card-body">
                 <div class="table-responsive">

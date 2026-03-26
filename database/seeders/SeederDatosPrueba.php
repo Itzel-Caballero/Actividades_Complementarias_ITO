@@ -275,6 +275,82 @@ class SeederDatosPrueba extends Seeder
             ],
         ]);
 
+        // ── Usuarios instructores ───────────────────────────────────────
+        DB::table('USUARIO')->insert([
+            [
+                'nombre'           => 'Carlos',
+                'apellido_paterno' => 'Ramírez',
+                'apellido_materno' => 'Mendoza',
+                'email'            => 'instructor1@ito.mx',
+                'contrasena'       => Hash::make('instructor123'),
+                'tipo_usuario'     => 'instructor',
+                'num_control'      => null,
+                'telefono'         => '9519876543',
+                'ultimo_acceso'    => null,
+                'created_at'       => now(),
+                'updated_at'       => now(),
+            ],
+            [
+                'nombre'           => 'María',
+                'apellido_paterno' => 'Torres',
+                'apellido_materno' => 'Vega',
+                'email'            => 'instructor2@ito.mx',
+                'contrasena'       => Hash::make('instructor123'),
+                'tipo_usuario'     => 'instructor',
+                'num_control'      => null,
+                'telefono'         => '9514567890',
+                'ultimo_acceso'    => null,
+                'created_at'       => now(),
+                'updated_at'       => now(),
+            ],
+            [
+                'nombre'           => 'Jorge',
+                'apellido_paterno' => 'Hernández',
+                'apellido_materno' => 'Cruz',
+                'email'            => 'instructor3@ito.mx',
+                'contrasena'       => Hash::make('instructor123'),
+                'tipo_usuario'     => 'instructor',
+                'num_control'      => null,
+                'telefono'         => '9512345678',
+                'ultimo_acceso'    => null,
+                'created_at'       => now(),
+                'updated_at'       => now(),
+            ],
+        ]);
+
+        // Asignar rol instructor y registrar en tabla instructor
+        $inst1 = \App\Models\User::where('email', 'instructor1@ito.mx')->first();
+        $inst2 = \App\Models\User::where('email', 'instructor2@ito.mx')->first();
+        $inst3 = \App\Models\User::where('email', 'instructor3@ito.mx')->first();
+
+        $inst1->assignRole('instructor');
+        $inst2->assignRole('instructor');
+        $inst3->assignRole('instructor');
+
+        DB::table('instructor')->insert([
+            [
+                'id_instructor'  => $inst1->id,
+                'id_departamento'=> 2,
+                'especialidad'   => 'Desarrollo Web',
+                'created_at'     => now(),
+                'updated_at'     => now(),
+            ],
+            [
+                'id_instructor'  => $inst2->id,
+                'id_departamento'=> 1,
+                'especialidad'   => 'Idiomas',
+                'created_at'     => now(),
+                'updated_at'     => now(),
+            ],
+            [
+                'id_instructor'  => $inst3->id,
+                'id_departamento'=> 4,
+                'especialidad'   => 'Cultura Física',
+                'created_at'     => now(),
+                'updated_at'     => now(),
+            ],
+        ]);
+
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
     }
 }

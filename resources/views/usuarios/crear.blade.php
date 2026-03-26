@@ -60,12 +60,37 @@
 
 <div class="form-group">
     <label>Tipo de usuario</label>
-    <select name="tipo_usuario" class="form-control" required>
+    <select name="tipo_usuario" id="tipo_usuario" class="form-control" required>
         <option value="">-- Selecciona --</option>
         <option value="alumno"     {{ old('tipo_usuario') == 'alumno'     ? 'selected' : '' }}>Alumno</option>
         <option value="instructor" {{ old('tipo_usuario') == 'instructor' ? 'selected' : '' }}>Instructor</option>
         <option value="admin"      {{ old('tipo_usuario') == 'admin'      ? 'selected' : '' }}>Admin</option>
     </select>
+</div>
+
+{{-- Campos extra para INSTRUCTOR --}}
+<div id="campos_instructor" style="display:none">
+    <hr>
+    <h6 class="text-primary"><i class="fa fa-chalkboard-teacher"></i> Datos del Instructor</h6>
+    <div class="form-group">
+        <label>Departamento <span class="text-danger">*</span></label>
+        <select name="id_departamento" class="form-control">
+            <option value="">-- Selecciona --</option>
+            @foreach ($departamentos as $dep)
+                <option value="{{ $dep->id_departamento }}"
+                    {{ old('id_departamento') == $dep->id_departamento ? 'selected' : '' }}>
+                    {{ $dep->nombre }}
+                </option>
+            @endforeach
+        </select>
+    </div>
+    <div class="form-group">
+        <label>Especialidad</label>
+        <input type="text" name="especialidad" class="form-control"
+               placeholder="Ej: Desarrollo Web, Cultura Física..."
+               value="{{ old('especialidad') }}">
+    </div>
+    <hr>
 </div>
 
 <div class="form-group">
@@ -105,4 +130,17 @@
         </div>
     </div>
 </section>
+
+@section('scripts')
+<script>
+    function toggleCamposExtra() {
+        var tipo = document.getElementById('tipo_usuario').value;
+        document.getElementById('campos_instructor').style.display =
+            tipo === 'instructor' ? 'block' : 'none';
+    }
+    document.getElementById('tipo_usuario').addEventListener('change', toggleCamposExtra);
+    // Mostrar al cargar si hay old() con valor
+    toggleCamposExtra();
+</script>
+@endsection
 @endsection

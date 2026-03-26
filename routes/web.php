@@ -8,6 +8,7 @@ use App\Http\Controllers\BlogController;
 use App\Http\Controllers\ActividadComplementariaController;
 use App\Http\Controllers\InscripcionController;
 use App\Http\Controllers\PerfilController;
+use App\Http\Controllers\GrupoController;
 
 
 Route::get('/', function () {
@@ -54,6 +55,8 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('blogs',    BlogController::class);
 
     Route::resource('actividades', ActividadComplementariaController::class);
+    Route::resource('grupos', GrupoController::class);
+    Route::patch('/grupos/{grupo}/asignar-instructor', [GrupoController::class, 'asignarInstructor'])->name('grupos.asignar-instructor');
     Route::post('/perfil/actualizar', [PerfilController::class, 'update'])->name('perfil.update');
 
     Route::post('/inscripciones', [InscripcionController::class, 'store'])->name('inscripciones.store');
