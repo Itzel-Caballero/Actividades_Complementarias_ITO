@@ -42,7 +42,6 @@ class UsuarioController extends Controller
         return view('usuarios.crear', compact('roles', 'departamentos'));
     }
 
-<<<<<<< HEAD
     public function store(Request $request)
     {
         $rules = [
@@ -56,8 +55,8 @@ class UsuarioController extends Controller
 
         // num_control solo obligatorio para alumnos
         if ($request->tipo_usuario === 'alumno') {
-            $rules['num_control']      = 'required|numeric';
-            $rules['id_carrera']       = 'required|exists:carrera,id_carrera';
+            $rules['num_control'] = 'required|numeric';
+            $rules['id_carrera']  = 'required|exists:carrera,id_carrera';
         }
 
         // departamento obligatorio para instructores
@@ -66,20 +65,6 @@ class UsuarioController extends Controller
         }
 
         $this->validate($request, $rules);
-=======
-   public function store(Request $request)
-{
-    $this->validate($request, [
-        'nombre'           => 'required',
-        'apellido_paterno' => 'required',
-        'email'            => 'required|email|unique:USUARIO,email',
-        'password'         => 'required|same:confirm-password',
-        'roles'            => 'required',
-        'num_control'      => 'required|numeric',
-        'tipo_usuario'     => 'required',
-        'id_carrera'       => 'required_if:tipo_usuario,alumno', // Obligatorio solo si es alumno
-    ]);
->>>>>>> 6684bd81b35d346dfbc15d05ac3906f3469b852e
 
     $user = User::create([
         'nombre'           => $request->nombre,
@@ -93,7 +78,6 @@ class UsuarioController extends Controller
         'id_carrera'       => $request->id_carrera, // <-- Agregamos esta línea
     ]);
 
-<<<<<<< HEAD
         // Insertar en tabla específica según tipo
         if ($request->tipo_usuario === 'instructor') {
             Instructor::create([
@@ -118,13 +102,9 @@ class UsuarioController extends Controller
         } catch (\Exception $e) {
             \Log::error('assignRole error: ' . $e->getMessage());
         }
-=======
-    // ... resto del código de roles ...
-    $user->assignRole($request->input('roles'));
 
-    return redirect()->route('usuarios.index')->with('success', 'Usuario creado correctamente.');
-}
->>>>>>> 6684bd81b35d346dfbc15d05ac3906f3469b852e
+        return redirect()->route('usuarios.index')->with('success', 'Usuario creado correctamente.');
+    }
 
     public function show($id) {}
 
