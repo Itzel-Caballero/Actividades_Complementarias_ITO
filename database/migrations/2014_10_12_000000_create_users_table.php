@@ -12,7 +12,7 @@ class CreateUsersTable extends Migration
             $table->id('id_usuario');
             $table->string('email', 100)->unique();
             $table->string('contraseña', 255);
-            $table->enum('tipo_usuario', ['alumno', 'instructor', 'admin']);
+            $table->enum('tipo_usuario', ['alumno', 'instructor', 'admin', 'coordinador']);
             $table->dateTime('ultimo_acceso')->nullable();
             $table->integer('num_control')->nullable();
             $table->string('nombre', 100)->nullable();

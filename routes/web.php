@@ -9,6 +9,7 @@ use App\Http\Controllers\ActividadComplementariaController;
 use App\Http\Controllers\InscripcionController;
 use App\Http\Controllers\PerfilController;
 use App\Http\Controllers\GrupoController;
+use App\Http\Controllers\CoordinadorController;
 
 
 Route::get('/', function () {
@@ -21,7 +22,7 @@ Auth::routes();
 Route::get('/debug-user', function () {
     $user = Auth::user();
     if (!$user) return 'No hay usuario autenticado';
-    
+
     return [
         'id_usuario'  => $user->id,
         'nombre'      => $user->nombre,
@@ -57,11 +58,38 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('actividades', ActividadComplementariaController::class);
     Route::resource('grupos', GrupoController::class);
     Route::patch('/grupos/{grupo}/asignar-instructor', [GrupoController::class, 'asignarInstructor'])->name('grupos.asignar-instructor');
+
     Route::post('/perfil/actualizar', [PerfilController::class, 'update'])->name('perfil.update');
 
     Route::post('/inscripciones', [InscripcionController::class, 'store'])->name('inscripciones.store');
     Route::get('/mis-inscripciones', [InscripcionController::class, 'index'])->name('inscripciones.index');
     Route::post('/inscripciones/{inscripcion}/baja', [InscripcionController::class, 'darBaja'])->name('inscripciones.baja');
 
+    // ─── Rutas del Coordinador ────────────────────────────────────────────
+    Route::prefix('coordinador')->name('coordinador.')->group(function () {
 
+        Route::get('/',  [CoordinadorController::class, 'index'])->name('index');
+
+        // Grupos y horarios
+        Route::get('/grupos',              [CoordinadorController::class, 'grupos'])->name('grupos');
+        Route::get('/grupos/crear',        [CoordinadorController::class, 'createGrupo'])->name('grupos.create');
+        Route::post('/grupos',             [CoordinadorController::class, 'storeGrupo'])->name('grupos.store');
+        Route::get('/grupos/{id}/editar',  [CoordinadorController::class, 'editGrupo'])->name('grupos.edit');
+        Route::put('/grupos/{id}',         [CoordinadorController::class, 'updateGrupo'])->name('grupos.update');
+        Route::delete('/grupos/{id}',      [CoordinadorController::class, 'destroyGrupo'])->name('grupos.destroy');
+        Route::post('/grupos/{id}/instructor', [CoordinadorController::class, 'asignarInstructor'])->name('grupos.asignar_instructor');
+
+        // Actividades
+        Route::get('/actividades', [CoordinadorController::class, 'actividades'])->name('actividades');
+
+        // Docentes
+        Route::get('/docentes', [CoordinadorController::class, 'docentes'])->name('docentes');
+
+        // Alumnos
+        Route::get('/alumnos',  [CoordinadorController::class, 'alumnos'])->name('alumnos');
+
+        // AJAX: búsqueda de instructores
+        Route::get('/api/instructores', [CoordinadorController::class, 'buscarInstructores'])->name('api.instructores');
     });
+
+});

@@ -8,6 +8,8 @@ use App\Models\ActividadComplementaria;
 use App\Models\Instructor;
 use App\Models\Semestre;
 use App\Models\Ubicacion;
+use App\Models\DiaSemana;
+use App\Models\Horario;
 
 class GrupoController extends Controller
 {
@@ -35,8 +37,9 @@ class GrupoController extends Controller
         $instructores = Instructor::with('usuario')->get();
         $semestres    = Semestre::orderBy('año', 'desc')->get();
         $ubicaciones  = Ubicacion::orderBy('espacio')->get();
+        $diasSemana   = DiaSemana::all();
 
-        return view('grupos.create', compact('actividades', 'instructores', 'semestres', 'ubicaciones'));
+        return view('grupos.create', compact('actividades', 'instructores', 'semestres', 'ubicaciones', 'diasSemana'));
     }
 
     public function store(Request $request)
@@ -55,20 +58,33 @@ class GrupoController extends Controller
             'id_ubicacion'  => 'nullable|exists:ubicacion,id_ubicacion',
         ]);
 
-        Grupo::create([
-            'id_actividad'        => $request->id_actividad,
-            'id_semestre'         => $request->id_semestre,
-            'grupo'               => $request->grupo,
-            'cupo_maximo'         => $request->cupo_maximo,
-            'cupo_ocupado'        => 0,
-            'modalidad'           => $request->modalidad,
-            'estatus'             => $request->estatus ?? 'abierta',
-            'fecha_inicio'        => $request->fecha_inicio,
-            'fecha_fin'           => $request->fecha_fin,
-            'id_instructor'       => $request->id_instructor,
-            'id_ubicacion'        => $request->id_ubicacion,
+        $grupo = Grupo::create([
+            'id_actividad'          => $request->id_actividad,
+            'id_semestre'           => $request->id_semestre,
+            'grupo'                 => $request->grupo,
+            'cupo_maximo'           => $request->cupo_maximo,
+            'cupo_ocupado'          => 0,
+            'modalidad'             => $request->modalidad,
+            'estatus'               => $request->estatus ?? 'abierta',
+            'fecha_inicio'          => $request->fecha_inicio,
+            'fecha_fin'             => $request->fecha_fin,
+            'id_instructor'         => $request->id_instructor ?: null,
+            'id_ubicacion'          => $request->id_ubicacion ?: null,
             'materiales_requeridos' => $request->materiales_requeridos,
         ]);
+
+        if ($request->filled('horarios')) {
+            foreach ($request->horarios as $h) {
+                if (!empty($h['id_dia']) && !empty($h['hora_inicio']) && !empty($h['hora_fin'])) {
+                    Horario::create([
+                        'id_grupo'    => $grupo->id_grupo,
+                        'id_dia'      => $h['id_dia'],
+                        'hora_inicio' => $h['hora_inicio'],
+                        'hora_fin'    => $h['hora_fin'],
+                    ]);
+                }
+            }
+        }
 
         return redirect()->route('grupos.index')
                          ->with('success', 'Grupo creado correctamente.');
@@ -78,13 +94,14 @@ class GrupoController extends Controller
     {
         $this->soloAdmin();
 
-        $grupo        = Grupo::with('instructor')->findOrFail($id);
+        $grupo        = Grupo::with(['instructor', 'horarios'])->findOrFail($id);
         $actividades  = ActividadComplementaria::where('disponible', true)->orderBy('nombre')->get();
         $instructores = Instructor::with('usuario')->get();
         $semestres    = Semestre::orderBy('año', 'desc')->get();
         $ubicaciones  = Ubicacion::orderBy('espacio')->get();
+        $diasSemana   = DiaSemana::all();
 
-        return view('grupos.edit', compact('grupo', 'actividades', 'instructores', 'semestres', 'ubicaciones'));
+        return view('grupos.edit', compact('grupo', 'actividades', 'instructores', 'semestres', 'ubicaciones', 'diasSemana'));
     }
 
     public function update(Request $request, $id)
@@ -107,16 +124,30 @@ class GrupoController extends Controller
         $grupo->update([
             'id_actividad'          => $request->id_actividad,
             'id_semestre'           => $request->id_semestre,
-            'grupo'                  => $request->grupo,
+            'grupo'                 => $request->grupo,
             'cupo_maximo'           => $request->cupo_maximo,
             'modalidad'             => $request->modalidad,
             'estatus'               => $request->estatus,
             'fecha_inicio'          => $request->fecha_inicio,
             'fecha_fin'             => $request->fecha_fin,
-            'id_instructor'         => $request->id_instructor,
-            'id_ubicacion'          => $request->id_ubicacion,
+            'id_instructor'         => $request->id_instructor ?: null,
+            'id_ubicacion'          => $request->id_ubicacion ?: null,
             'materiales_requeridos' => $request->materiales_requeridos,
         ]);
+
+        $grupo->horarios()->delete();
+        if ($request->filled('horarios')) {
+            foreach ($request->horarios as $h) {
+                if (!empty($h['id_dia']) && !empty($h['hora_inicio']) && !empty($h['hora_fin'])) {
+                    Horario::create([
+                        'id_grupo'    => $grupo->id_grupo,
+                        'id_dia'      => $h['id_dia'],
+                        'hora_inicio' => $h['hora_inicio'],
+                        'hora_fin'    => $h['hora_fin'],
+                    ]);
+                }
+            }
+        }
 
         return redirect()->route('grupos.index')
                          ->with('success', 'Grupo actualizado correctamente.');

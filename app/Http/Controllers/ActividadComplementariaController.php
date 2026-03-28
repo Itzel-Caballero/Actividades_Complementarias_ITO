@@ -70,15 +70,18 @@ class ActividadComplementariaController extends Controller
 
     public function create()
     {
-        if (!auth()->user()->hasRole('admin')) abort(403);
+        $user = auth()->user();
+        if (!$user->hasRole('admin') && !$user->hasRole('coordinador')) abort(403);
         $departamentos = Departamento::all();
         $carreras      = Carrera::all();
+        // Coordinador vuelve a su vista, admin a la suya
         return view('actividades.create', compact('departamentos', 'carreras'));
     }
 
     public function store(Request $request)
     {
-        if (!auth()->user()->hasRole('admin')) abort(403);
+        $user = auth()->user();
+        if (!$user->hasRole('admin') && !$user->hasRole('coordinador')) abort(403);
 
         $request->validate([
             'nombre'          => 'required|string|max:150',
@@ -100,13 +103,18 @@ class ActividadComplementariaController extends Controller
             $actividad->carreras()->sync($request->carreras);
         }
 
-        return redirect()->route('actividades.index')
+        $redirectRoute = auth()->user()->hasRole('coordinador')
+            ? 'coordinador.actividades'
+            : 'actividades.index';
+
+        return redirect()->route($redirectRoute)
                          ->with('success', 'Actividad creada correctamente.');
     }
 
     public function edit($id)
     {
-        if (!auth()->user()->hasRole('admin')) abort(403);
+        $user = auth()->user();
+        if (!$user->hasRole('admin') && !$user->hasRole('coordinador')) abort(403);
         $actividad        = ActividadComplementaria::with('carreras')->findOrFail($id);
         $departamentos    = Departamento::all();
         $carreras         = Carrera::all();
@@ -137,13 +145,18 @@ class ActividadComplementariaController extends Controller
 
         $actividad->carreras()->sync($request->carreras ?? []);
 
-        return redirect()->route('actividades.index')
+        $redirectRoute = auth()->user()->hasRole('coordinador')
+            ? 'coordinador.actividades'
+            : 'actividades.index';
+
+        return redirect()->route($redirectRoute)
                          ->with('success', 'Actividad actualizada correctamente.');
     }
 
-  public function destroy($id)
-{
-    if (!auth()->user()->hasRole('admin')) abort(403);
+    public function destroy($id)
+    {
+        $user = auth()->user();
+        if (!$user->hasRole('admin') && !$user->hasRole('coordinador')) abort(403);
     
     $actividad = ActividadComplementaria::findOrFail($id);
     
@@ -165,7 +178,11 @@ class ActividadComplementariaController extends Controller
     
     $actividad->delete();
     
-    return redirect()->route('actividades.index')
-                     ->with('success', 'Actividad eliminada correctamente.');
-}
+        $redirectRoute = auth()->user()->hasRole('coordinador')
+            ? 'coordinador.actividades'
+            : 'actividades.index';
+
+        return redirect()->route($redirectRoute)
+                         ->with('success', 'Actividad eliminada correctamente.');
+    }
 }
