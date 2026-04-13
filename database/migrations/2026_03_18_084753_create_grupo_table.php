@@ -29,9 +29,9 @@ class CreateGrupoTable extends Migration
         $table->date('fecha_fin');
         $table->timestamps();
 
-        $table->foreign('id_actividad')->references('id_actividad')->on('ACTIVIDAD_COMPLEMENTARIA');
-        $table->foreign('id_semestre')->references('id_semestre')->on('SEMESTRE');
-        $table->foreign('id_ubicacion')->references('id_ubicacion')->on('UBICACION');
+        $table->foreign('id_actividad')->references('id_actividad')->on('actividad_complementaria');
+        $table->foreign('id_semestre')->references('id_semestre')->on('semestre');
+        $table->foreign('id_ubicacion')->references('id_ubicacion')->on('ubicacion');
     });
 }
 

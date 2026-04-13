@@ -3,35 +3,26 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 class CreateInstructorTable extends Migration
 {
-    /**
-     * Run the migrations.
-     *
-     * @return void
-     */
-    
     public function up(): void
-{
-    Schema::dropIfExists('instructor');
-    
-    Schema::create('instructor', function (Blueprint $table) {
-        $table->integer('id_instructor')->primary();
-        $table->unsignedBigInteger('id_departamento');
-        $table->string('especialidad', 100)->nullable();
-        $table->timestamps();
+    {
+        Schema::dropIfExists('instructor');
 
-        $table->foreign('id_departamento')->references('id_departamento')->on('departamento');
-    });
+        Schema::create('instructor', function (Blueprint $table) {
+            $table->integer('id_instructor')->primary();
+            $table->unsignedBigInteger('id_departamento');
+            $table->string('especialidad', 100)->nullable();
+            $table->timestamps();
 
-    DB::statement('ALTER TABLE instructor ADD CONSTRAINT instructor_usuario_fk FOREIGN KEY (id_instructor) REFERENCES usuario(id)');
-}
-    /**
-     * Reverse the migrations.
-     *
-     * @return void
-     */
+            $table->foreign('id_departamento')->references('id_departamento')->on('departamento');
+        });
+
+        DB::statement('ALTER TABLE instructor ADD CONSTRAINT instructor_usuario_fk FOREIGN KEY (id_instructor) REFERENCES USUARIO(id)');
+    }
+
     public function down()
     {
         Schema::dropIfExists('instructor');

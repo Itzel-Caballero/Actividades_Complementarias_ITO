@@ -8,16 +8,23 @@
     </div>
     <div class="section-body">
 
-        {{-- Filtros --}}
+        @if(session('success'))
+            <div class="alert alert-success alert-dismissible fade show">
+                <strong>{{ session('success') }}</strong>
+                <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+            </div>
+        @endif
+
+        {{-- Filtros instantáneos --}}
         <div class="card">
             <div class="card-body py-2">
-                <form method="GET" class="form-row align-items-end">
-                    <div class="col-auto mb-2">
-                        <input type="text" name="buscar" value="{{ request('buscar') }}"
+                <form method="GET" id="form-filtros-doc" class="form-row align-items-end">
+                    <div class="col-12 col-md-3 mb-2">
+                        <input type="text" name="buscar" id="buscar-doc" value="{{ request('buscar') }}"
                                class="form-control form-control-sm" placeholder="Buscar por nombre...">
                     </div>
-                    <div class="col-auto mb-2">
-                        <select name="id_departamento" class="form-control form-control-sm">
+                    <div class="col-6 col-md-3 mb-2">
+                        <select name="id_departamento" id="id_departamento_doc" class="form-control form-control-sm">
                             <option value="">Todos los departamentos</option>
                             @foreach($departamentos as $dep)
                                 <option value="{{ $dep->id_departamento }}"
@@ -27,12 +34,8 @@
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-auto mb-2">
-                        <input type="text" name="especialidad" value="{{ request('especialidad') }}"
-                               class="form-control form-control-sm" placeholder="Especialidad...">
-                    </div>
-                    <div class="col-auto mb-2">
-                        <select name="id_actividad" class="form-control form-control-sm">
+                    <div class="col-6 col-md-3 mb-2">
+                        <select name="id_actividad" id="id_actividad_doc" class="form-control form-control-sm">
                             <option value="">Todas las actividades</option>
                             @foreach($actividades as $act)
                                 <option value="{{ $act->id_actividad }}"
@@ -42,11 +45,17 @@
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-auto mb-2">
-                        <button type="submit" class="btn btn-secondary btn-sm">
-                            <i class="fa fa-search"></i> Filtrar
-                        </button>
-                        <a href="{{ route('coordinador.docentes') }}" class="btn btn-light btn-sm ml-1">Limpiar</a>
+
+                
+
+                    <div class="col-6 col-md-2 mb-2">
+                        <input type="text" name="especialidad" id="especialidad_doc" value="{{ request('especialidad') }}"
+                               class="form-control form-control-sm" placeholder="Especialidad...">
+                    </div>
+                    <div class="col-6 col-md-1 mb-2">
+                        <a href="{{ route('coordinador.docentes') }}" class="btn btn-light btn-sm btn-block">
+                            <i class="fa fa-times"></i>
+                        </a>
                     </div>
                 </form>
             </div>
@@ -72,18 +81,12 @@
                             @forelse($instructores as $ins)
                             <tr>
                                 <td>{{ $loop->iteration }}</td>
-                                <td>
-                                    <strong>{{ $ins->usuario->nombre_completo ?? 'N/A' }}</strong>
-                                </td>
-                                <td>
-                                    <small class="text-muted">{{ $ins->usuario->email ?? '—' }}</small>
-                                </td>
+                                <td><strong>{{ $ins->usuario->nombre_completo ?? 'N/A' }}</strong></td>
+                                <td><small class="text-muted">{{ $ins->usuario->email ?? '—' }}</small></td>
                                 <td>{{ $ins->departamento->nombre ?? 'N/A' }}</td>
                                 <td>{{ $ins->especialidad ?? '—' }}</td>
                                 <td>
-                                    <span class="badge badge-primary">
-                                        {{ $ins->grupos->count() }}
-                                    </span>
+                                    <span class="badge badge-primary">{{ $ins->grupos->count() }}</span>
                                 </td>
                                 <td>
                                     @foreach($ins->grupos->unique('id_actividad')->take(3) as $g)
@@ -92,9 +95,7 @@
                                         </span>
                                     @endforeach
                                     @if($ins->grupos->unique('id_actividad')->count() > 3)
-                                        <small class="text-muted">
-                                            +{{ $ins->grupos->unique('id_actividad')->count() - 3 }} más
-                                        </small>
+                                        <small class="text-muted">+{{ $ins->grupos->unique('id_actividad')->count() - 3 }} más</small>
                                     @endif
                                     @if($ins->grupos->isEmpty())
                                         <small class="text-muted">Sin grupos</small>
@@ -105,7 +106,7 @@
                             <tr>
                                 <td colspan="7" class="text-center py-5 text-muted">
                                     <i class="fas fa-chalkboard-teacher fa-2x mb-2 d-block"></i>
-                                    No hay docentes registrados.
+                                    No hay docentes con los filtros seleccionados.
                                 </td>
                             </tr>
                             @endforelse
@@ -120,4 +121,28 @@
 
     </div>
 </section>
+@endsection
+
+@section('scripts')
+<script>
+// Filtros que envían el form al instante al cambiar
+['id_departamento_doc', 'id_actividad_doc'].forEach(function(id) {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('change', function() {
+        document.getElementById('form-filtros-doc').submit();
+    });
+});
+
+// Búsqueda y especialidad con debounce
+let debounceTimer;
+['buscar-doc', 'especialidad_doc'].forEach(function(id) {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', function() {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(function() {
+            document.getElementById('form-filtros-doc').submit();
+        }, 600);
+    });
+});
+</script>
 @endsection

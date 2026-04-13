@@ -22,50 +22,24 @@ class CoordinadorController extends Controller
     {
         $this->middleware('auth');
         $this->middleware(function ($request, $next) {
-            if (!auth()->user()->hasRole('coordinador')) {
-                abort(403, 'Acceso denegado.');
-            }
+            if (!auth()->user()->hasRole('coordinador')) abort(403, 'Acceso denegado.');
             return $next($request);
         });
     }
 
-    /**
-     * Determina el semestre activo según la fecha actual y devuelve
-     * un array con id, etiqueta y clase CSS para el badge.
-     */
     private function getSemestreActual(): array
     {
-        $mes = Carbon::now()->month;
-        $anio = Carbon::now()->year;
-
-        // Enero–Junio  => periodo 1
-        // Julio–Diciembre => periodo 2  (Agosto-Diciembre en la mayoría de TecNMs)
+        $mes    = Carbon::now()->month;
+        $anio   = Carbon::now()->year;
         $periodo = ($mes >= 1 && $mes <= 6) ? 1 : 2;
 
-        $semestre = Semestre::where('año', $anio)
-            ->where('periodo', $periodo)
-            ->first();
+        $semestre = Semestre::where('año', $anio)->where('periodo', $periodo)->first()
+            ?? Semestre::orderByDesc('año')->orderByDesc('periodo')->first();
 
-        // Fallback: buscar el más reciente
-        if (!$semestre) {
-            $semestre = Semestre::orderByDesc('año')
-                ->orderByDesc('periodo')
-                ->first();
-        }
+        $etiqueta = $periodo === 1 ? "Enero–Junio {$anio}" : "Agosto–Diciembre {$anio}";
+        $clase    = $periodo === 1 ? 'semestre-ene-jun' : 'semestre-ago-dic';
 
-        $etiqueta = $periodo === 1
-            ? "Enero–Junio {$anio}"
-            : "Agosto–Diciembre {$anio}";
-
-        $clase = $periodo === 1 ? 'semestre-ene-jun' : 'semestre-ago-dic';
-
-        return [
-            'id'       => $semestre?->id_semestre,
-            'etiqueta' => $etiqueta,
-            'clase'    => $clase,
-            'periodo'  => $periodo,
-            'anio'     => $anio,
-        ];
+        return ['id' => $semestre?->id_semestre, 'etiqueta' => $etiqueta, 'clase' => $clase, 'periodo' => $periodo, 'anio' => $anio];
     }
 
     // ─── Dashboard ────────────────────────────────────────────────────────
@@ -76,40 +50,22 @@ class CoordinadorController extends Controller
         $totalInstructores = Instructor::count();
         $totalAlumnos      = Alumno::count();
         $totalInscritos    = Inscripcion::whereIn('estatus', ['inscrito', 'cursando'])->count();
+        $gruposRecientes   = Grupo::with(['actividad', 'instructor.usuario', 'horarios.dia'])->latest()->take(5)->get();
 
-        $gruposRecientes = Grupo::with(['actividad', 'instructor.usuario', 'horarios.dia'])
-            ->latest()->take(5)->get();
-
-        return view('coordinador.index', compact(
-            'totalGrupos', 'gruposSinDoc', 'totalInstructores',
-            'totalAlumnos', 'totalInscritos', 'gruposRecientes'
-        ));
+        return view('coordinador.index', compact('totalGrupos', 'gruposSinDoc', 'totalInstructores', 'totalAlumnos', 'totalInscritos', 'gruposRecientes'));
     }
 
     // ─── GRUPOS ───────────────────────────────────────────────────────────
     public function grupos(Request $request)
     {
-        $query = Grupo::with([
-            'actividad.departamento',
-            'instructor.usuario',
-            'horarios.dia',
-            'actividad.carreras'
-        ]);
+        $query = Grupo::with(['actividad.departamento', 'instructor.usuario', 'horarios.dia', 'actividad.carreras', 'inscripciones']);
 
-        if ($request->filled('buscar')) {
-            $buscar = $request->buscar;
-            $query->whereHas('actividad', fn($q) =>
-                $q->where('nombre', 'like', "%{$buscar}%")
-            );
-        }
-        if ($request->filled('id_departamento')) {
-            $query->whereHas('actividad', fn($q) =>
-                $q->where('id_departamento', $request->id_departamento)
-            );
-        }
-        if ($request->filled('estatus')) {
+        if ($request->filled('buscar'))
+            $query->whereHas('actividad', fn($q) => $q->where('nombre', 'like', "%{$request->buscar}%"));
+        if ($request->filled('id_departamento'))
+            $query->whereHas('actividad', fn($q) => $q->where('id_departamento', $request->id_departamento));
+        if ($request->filled('estatus'))
             $query->where('estatus', $request->estatus);
-        }
 
         $grupos        = $query->paginate(12)->withQueryString();
         $departamentos = Departamento::orderBy('nombre')->get();
@@ -119,19 +75,28 @@ class CoordinadorController extends Controller
 
     public function createGrupo()
     {
-        $actividades      = ActividadComplementaria::with('departamento')->orderBy('nombre')->get();
-        $instructores     = Instructor::with(['usuario', 'departamento'])->get();
-        $semestres        = Semestre::orderByDesc('año')->orderByDesc('periodo')->get();
-        $ubicaciones      = Ubicacion::orderBy('espacio')->get();
-        $diasSemana       = DiaSemana::all();
-        $carreras         = Carrera::orderBy('nombre')->get();
-        $departamentos    = Departamento::orderBy('nombre')->get();
-        $semestreActual   = $this->getSemestreActual();
+        $actividades    = ActividadComplementaria::with('departamento')->orderBy('nombre')->get();
+        $instructores   = Instructor::with(['usuario', 'departamento'])->get();
+        $semestres      = Semestre::orderByDesc('año')->orderByDesc('periodo')->get();
+        $ubicaciones    = Ubicacion::orderBy('espacio')->get();
+        $diasSemana     = DiaSemana::all();
+        $carreras       = Carrera::orderBy('nombre')->get();
+        $departamentos  = Departamento::orderBy('nombre')->get();
+        $semestreActual = $this->getSemestreActual();
+
+        // JSON de instructores por departamento para el filtro dinámico
+        $instructoresPorDepto = Instructor::with(['usuario', 'departamento'])
+            ->get()
+            ->map(fn($i) => [
+                'id'         => $i->id_instructor,
+                'nombre'     => $i->usuario->nombre_completo ?? 'Sin nombre',
+                'id_depto'   => $i->id_departamento,
+                'depto'      => $i->departamento->nombre ?? 'N/A',
+            ]);
 
         return view('coordinador.create_grupo', compact(
-            'actividades', 'instructores', 'semestres',
-            'ubicaciones', 'diasSemana', 'carreras',
-            'departamentos', 'semestreActual'
+            'actividades', 'instructores', 'semestres', 'ubicaciones',
+            'diasSemana', 'carreras', 'departamentos', 'semestreActual', 'instructoresPorDepto'
         ));
     }
 
@@ -146,14 +111,6 @@ class CoordinadorController extends Controller
             'fecha_inicio'  => 'required|date',
             'fecha_fin'     => 'required|date|after_or_equal:fecha_inicio',
             'id_instructor' => 'nullable|exists:instructor,id_instructor',
-        ], [
-            'id_actividad.required' => 'Selecciona una actividad.',
-            'id_semestre.required'  => 'Selecciona un semestre.',
-            'grupo.required'        => 'El identificador del grupo es obligatorio.',
-            'cupo_maximo.required'  => 'El cupo máximo es obligatorio.',
-            'fecha_inicio.required' => 'La fecha de inicio es obligatoria.',
-            'fecha_fin.required'    => 'La fecha de fin es obligatoria.',
-            'fecha_fin.after_or_equal' => 'La fecha de fin debe ser posterior a la de inicio.',
         ]);
 
         $grupo = Grupo::create([
@@ -174,36 +131,45 @@ class CoordinadorController extends Controller
         if ($request->filled('horarios')) {
             foreach ($request->horarios as $h) {
                 if (!empty($h['id_dia']) && !empty($h['hora_inicio']) && !empty($h['hora_fin'])) {
-                    Horario::create([
-                        'id_grupo'    => $grupo->id_grupo,
-                        'id_dia'      => $h['id_dia'],
-                        'hora_inicio' => $h['hora_inicio'],
-                        'hora_fin'    => $h['hora_fin'],
-                    ]);
+                    Horario::create(['id_grupo' => $grupo->id_grupo, 'id_dia' => $h['id_dia'], 'hora_inicio' => $h['hora_inicio'], 'hora_fin' => $h['hora_fin']]);
                 }
             }
         }
 
-        return redirect()->route('coordinador.grupos')
-            ->with('success', "Grupo {$grupo->grupo} creado correctamente.");
+        return redirect()->route('coordinador.grupos')->with('success', "Grupo {$grupo->grupo} creado correctamente.");
     }
 
     public function editGrupo($id)
     {
-        $grupo            = Grupo::with(['actividad.carreras', 'instructor', 'horarios'])->findOrFail($id);
-        $actividades      = ActividadComplementaria::with('departamento')->orderBy('nombre')->get();
-        $instructores     = Instructor::with(['usuario', 'departamento'])->get();
-        $semestres        = Semestre::orderByDesc('año')->orderByDesc('periodo')->get();
-        $ubicaciones      = Ubicacion::orderBy('espacio')->get();
-        $diasSemana       = DiaSemana::all();
-        $carreras         = Carrera::orderBy('nombre')->get();
-        $departamentos    = Departamento::orderBy('nombre')->get();
-        $semestreActual   = $this->getSemestreActual();
+        $grupo          = Grupo::with(['actividad.carreras', 'instructor', 'horarios'])->findOrFail($id);
+        $actividades    = ActividadComplementaria::with('departamento')->orderBy('nombre')->get();
+        $instructores   = Instructor::with(['usuario', 'departamento'])->get();
+        $semestres      = Semestre::orderByDesc('año')->orderByDesc('periodo')->get();
+        $ubicaciones    = Ubicacion::orderBy('espacio')->get();
+        $diasSemana     = DiaSemana::all();
+        $carreras       = Carrera::orderBy('nombre')->get();
+        $departamentos  = Departamento::orderBy('nombre')->get();
+        $semestreActual = $this->getSemestreActual();
+
+        $instructoresPorDepto = Instructor::with(['usuario', 'departamento'])
+            ->get()
+            ->map(fn($i) => [
+                'id'       => $i->id_instructor,
+                'nombre'   => $i->usuario->nombre_completo ?? 'Sin nombre',
+                'id_depto' => $i->id_departamento,
+                'depto'    => $i->departamento->nombre ?? 'N/A',
+            ]);
+
+        $horExistentes = $grupo->horarios->map(function($h) {
+            return [
+                'id_dia'      => $h->id_dia,
+                'hora_inicio' => substr($h->hora_inicio, 0, 5),
+            ];
+        })->values();
 
         return view('coordinador.edit_grupo', compact(
-            'grupo', 'actividades', 'instructores', 'semestres',
-            'ubicaciones', 'diasSemana', 'carreras',
-            'departamentos', 'semestreActual'
+            'grupo', 'actividades', 'instructores', 'semestres', 'ubicaciones',
+            'diasSemana', 'carreras', 'departamentos', 'semestreActual', 'instructoresPorDepto', 'horExistentes'
         ));
     }
 
@@ -239,18 +205,12 @@ class CoordinadorController extends Controller
         if ($request->filled('horarios')) {
             foreach ($request->horarios as $h) {
                 if (!empty($h['id_dia']) && !empty($h['hora_inicio']) && !empty($h['hora_fin'])) {
-                    Horario::create([
-                        'id_grupo'    => $grupo->id_grupo,
-                        'id_dia'      => $h['id_dia'],
-                        'hora_inicio' => $h['hora_inicio'],
-                        'hora_fin'    => $h['hora_fin'],
-                    ]);
+                    Horario::create(['id_grupo' => $grupo->id_grupo, 'id_dia' => $h['id_dia'], 'hora_inicio' => $h['hora_inicio'], 'hora_fin' => $h['hora_fin']]);
                 }
             }
         }
 
-        return redirect()->route('coordinador.grupos')
-            ->with('success', "Grupo {$grupo->grupo} actualizado correctamente.");
+        return redirect()->route('coordinador.grupos')->with('success', "Grupo {$grupo->grupo} actualizado correctamente.");
     }
 
     public function destroyGrupo($id)
@@ -263,9 +223,7 @@ class CoordinadorController extends Controller
         }
         $nombre = $grupo->grupo;
         $grupo->delete();
-
-        return redirect()->route('coordinador.grupos')
-            ->with('success', "Grupo {$nombre} eliminado.");
+        return redirect()->route('coordinador.grupos')->with('success', "Grupo {$nombre} eliminado.");
     }
 
     public function asignarInstructor(Request $request, $id)
@@ -280,15 +238,12 @@ class CoordinadorController extends Controller
     {
         $query = ActividadComplementaria::with(['departamento', 'grupos', 'carreras']);
 
-        if ($request->filled('buscar')) {
+        if ($request->filled('buscar'))
             $query->where('nombre', 'like', '%'.$request->buscar.'%');
-        }
-        if ($request->filled('id_departamento')) {
+        if ($request->filled('id_departamento'))
             $query->where('id_departamento', $request->id_departamento);
-        }
-        if ($request->filled('disponible') && $request->disponible !== '') {
+        if ($request->filled('disponible') && $request->disponible !== '')
             $query->where('disponible', $request->disponible);
-        }
 
         $actividades   = $query->orderBy('nombre')->paginate(12)->withQueryString();
         $departamentos = Departamento::orderBy('nombre')->get();
@@ -302,25 +257,19 @@ class CoordinadorController extends Controller
         $query = Instructor::with(['usuario', 'departamento', 'grupos.actividad']);
 
         if ($request->filled('buscar')) {
-            $buscar = $request->buscar;
+            $b = $request->buscar;
             $query->whereHas('usuario', fn($q) =>
-                $q->where('nombre', 'like', "%{$buscar}%")
-                  ->orWhere('apellido_paterno', 'like', "%{$buscar}%")
-                  ->orWhere('apellido_materno', 'like', "%{$buscar}%")
+                $q->where('nombre', 'like', "%{$b}%")
+                  ->orWhere('apellido_paterno', 'like', "%{$b}%")
+                  ->orWhere('apellido_materno', 'like', "%{$b}%")
             );
         }
-        if ($request->filled('id_departamento')) {
+        if ($request->filled('id_departamento'))
             $query->where('id_departamento', $request->id_departamento);
-        }
-        if ($request->filled('especialidad')) {
+        if ($request->filled('especialidad'))
             $query->where('especialidad', 'like', '%'.$request->especialidad.'%');
-        }
-        if ($request->filled('id_actividad')) {
-            $idActividad = $request->id_actividad;
-            $query->whereHas('grupos', fn($q) =>
-                $q->where('id_actividad', $idActividad)
-            );
-        }
+        if ($request->filled('id_actividad'))
+            $query->whereHas('grupos', fn($q) => $q->where('id_actividad', $request->id_actividad));
 
         $instructores  = $query->paginate(15)->withQueryString();
         $departamentos = Departamento::orderBy('nombre')->get();
@@ -332,41 +281,77 @@ class CoordinadorController extends Controller
     // ─── ALUMNOS ──────────────────────────────────────────────────────────
     public function alumnos(Request $request)
     {
-        $query = Alumno::with(['usuario', 'carrera', 'inscripciones.grupo.actividad']);
+        // Solo mostrar alumnos inscritos en actividades del departamento del coordinador
+        // (filtramos por inscripciones activas en grupos de actividades)
+        $query = Alumno::with(['usuario', 'carrera', 'inscripciones.grupo.actividad.departamento'])
+            ->whereHas('inscripciones', fn($q) =>
+                $q->whereIn('estatus', ['inscrito', 'cursando'])
+            );
 
         if ($request->filled('buscar')) {
-            $buscar = $request->buscar;
+            $b = $request->buscar;
             $query->whereHas('usuario', fn($q) =>
-                $q->where('nombre', 'like', "%{$buscar}%")
-                  ->orWhere('apellido_paterno', 'like', "%{$buscar}%")
-                  ->orWhere('num_control', 'like', "%{$buscar}%")
+                $q->where('nombre', 'like', "%{$b}%")
+                  ->orWhere('apellido_paterno', 'like', "%{$b}%")
+                  ->orWhere('num_control', 'like', "%{$b}%")
             );
         }
-        if ($request->filled('id_carrera')) {
+        if ($request->filled('id_carrera'))
             $query->where('id_carrera', $request->id_carrera);
-        }
-        if ($request->filled('semestre')) {
-            $query->where('semestre_cursando', $request->semestre);
-        }
-        if ($request->filled('inscripcion_activa')) {
-            if ($request->inscripcion_activa === '1') {
-                $query->whereHas('inscripciones', fn($q) =>
-                    $q->whereIn('estatus', ['inscrito', 'cursando'])
-                );
-            } elseif ($request->inscripcion_activa === '0') {
-                $query->whereDoesntHave('inscripciones', fn($q) =>
-                    $q->whereIn('estatus', ['inscrito', 'cursando'])
-                );
-            }
-        }
+        if ($request->filled('id_actividad'))
+            $query->whereHas('inscripciones.grupo', fn($q) => $q->where('id_actividad', $request->id_actividad));
+        if ($request->filled('id_departamento'))
+            $query->whereHas('inscripciones.grupo.actividad', fn($q) => $q->where('id_departamento', $request->id_departamento));
 
-        $alumnos  = $query->paginate(15)->withQueryString();
-        $carreras = Carrera::orderBy('nombre')->get();
+        $alumnos       = $query->paginate(15)->withQueryString();
+        $carreras      = Carrera::orderBy('nombre')->get();
+        $actividades   = ActividadComplementaria::orderBy('nombre')->get();
+        $departamentos = Departamento::orderBy('nombre')->get();
 
-        return view('coordinador.alumnos', compact('alumnos', 'carreras'));
+        return view('coordinador.alumnos', compact('alumnos', 'carreras', 'actividades', 'departamentos'));
     }
 
-    // ─── AJAX ─────────────────────────────────────────────────────────────
+    // ─── DAR DE BAJA a alumno ─────────────────────────────────────────────
+    public function darBajaAlumno(Request $request, $id_inscripcion)
+    {
+        $inscripcion = Inscripcion::with(['grupo', 'alumno'])->findOrFail($id_inscripcion);
+
+        // Actualizar cupo del grupo
+        $grupo = $inscripcion->grupo;
+        if ($grupo && $grupo->cupo_ocupado > 0) {
+            $grupo->decrement('cupo_ocupado');
+        }
+
+        // Dar de baja (no eliminamos, cambiamos estatus para preservar historial)
+        $inscripcion->update(['estatus' => 'baja']);
+
+        return redirect()->route('coordinador.alumnos', $request->query())
+            ->with('success', 'Alumno dado de baja correctamente.');
+    }
+
+    // ─── AJAX: instructores por departamento de actividad ─────────────────
+    public function instructoresPorActividad(Request $request)
+    {
+        $idActividad = $request->get('id_actividad');
+        $actividad   = ActividadComplementaria::find($idActividad);
+
+        $query = Instructor::with(['usuario', 'departamento']);
+
+        // Filtrar por el departamento de la actividad
+        if ($actividad) {
+            $query->where('id_departamento', $actividad->id_departamento);
+        }
+
+        return response()->json(
+            $query->get()->map(fn($i) => [
+                'id'     => $i->id_instructor,
+                'nombre' => $i->usuario->nombre_completo ?? 'Sin nombre',
+                'depto'  => $i->departamento->nombre ?? 'N/A',
+            ])
+        );
+    }
+
+    // ─── AJAX: buscar instructores (búsqueda libre) ───────────────────────
     public function buscarInstructores(Request $request)
     {
         $q = $request->get('q', '');

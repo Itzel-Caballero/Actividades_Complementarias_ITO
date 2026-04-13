@@ -18,8 +18,8 @@ class CreateActividadCarreraTable extends Migration
         $table->unsignedBigInteger('id_carrera');
         $table->primary(['id_actividad', 'id_carrera']);
 
-        $table->foreign('id_actividad')->references('id_actividad')->on('ACTIVIDAD_COMPLEMENTARIA');
-        $table->foreign('id_carrera')->references('id_carrera')->on('CARRERA');
+        $table->foreign('id_actividad')->references('id_actividad')->on('actividad_complementaria');
+        $table->foreign('id_carrera')->references('id_carrera')->on('carrera');
     });
 }
 

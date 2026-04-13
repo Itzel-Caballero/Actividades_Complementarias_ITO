@@ -7,34 +7,23 @@ use Illuminate\Support\Facades\DB;
 
 class CreateAlumnoTable extends Migration
 {
-    /**
-     * Run the migrations.
-     *
-     * @return void
-     */
-   
     public function up(): void
-{
-    Schema::dropIfExists('alumno');
-    
-    Schema::create('alumno', function (Blueprint $table) {
-        $table->integer('id_alumno')->primary();
-        $table->unsignedBigInteger('id_carrera');
-        $table->integer('semestre_cursando');
-        $table->integer('creditos_acumulados')->default(0);
-        $table->timestamps();
+    {
+        Schema::dropIfExists('alumno');
 
-        $table->foreign('id_carrera')->references('id_carrera')->on('carrera');
-    });
+        Schema::create('alumno', function (Blueprint $table) {
+            $table->integer('id_alumno')->primary();
+            $table->unsignedBigInteger('id_carrera');
+            $table->integer('semestre_cursando');
+            $table->integer('creditos_acumulados')->default(0);
+            $table->timestamps();
 
-    DB::statement('ALTER TABLE alumno ADD CONSTRAINT alumno_usuario_fk FOREIGN KEY (id_alumno) REFERENCES usuario(id)');
-}
+            $table->foreign('id_carrera')->references('id_carrera')->on('carrera');
+        });
 
-    /**
-     * Reverse the migrations.
-     *
-     * @return void
-     */
+        DB::statement('ALTER TABLE alumno ADD CONSTRAINT alumno_usuario_fk FOREIGN KEY (id_alumno) REFERENCES USUARIO(id)');
+    }
+
     public function down()
     {
         Schema::dropIfExists('alumno');

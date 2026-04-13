@@ -21,8 +21,8 @@ class CreateHorarioTable extends Migration
         $table->time('hora_fin');
         $table->timestamps();
 
-        $table->foreign('id_grupo')->references('id_grupo')->on('GRUPO');
-        $table->foreign('id_dia')->references('id_dia')->on('DIA_SEMANA');
+        $table->foreign('id_grupo')->references('id_grupo')->on('grupo');
+        $table->foreign('id_dia')->references('id_dia')->on('dia_semana');
     });
 }
 

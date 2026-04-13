@@ -114,9 +114,8 @@ class SeederUsuarios extends Seeder
             'Rios','Cabrera','Herrera','Medina','Ponce','Aguilar','Bernal','Cisneros',
         ];
 
-        $carreras = DB::table('carrera')->pluck('id_carrera')->toArray();
+        $carreras  = DB::table('carrera')->pluck('id_carrera')->toArray();
         $semestres = [1,2,3,4,5,6,7,8,9];
-        $role = \Spatie\Permission\Models\Role::findByName('alumno');
 
         for ($i = 1; $i <= 100; $i++) {
             $nombre    = $nombres[array_rand($nombres)];

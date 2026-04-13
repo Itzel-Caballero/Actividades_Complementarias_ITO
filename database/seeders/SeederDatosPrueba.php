@@ -38,12 +38,12 @@ class SeederDatosPrueba extends Seeder
 
         // ── Días de la semana ──────────────────────────────────────────
         DB::table('dia_semana')->insert([
-            ['nombre_dia' => 'lunes'],
-            ['nombre_dia' => 'martes'],
-            ['nombre_dia' => 'miercoles'],
-            ['nombre_dia' => 'jueves'],
-            ['nombre_dia' => 'viernes'],
-            ['nombre_dia' => 'sabado'],
+            ['nombre_dia' => 'lunes',     'created_at' => now(), 'updated_at' => now()],
+            ['nombre_dia' => 'martes',    'created_at' => now(), 'updated_at' => now()],
+            ['nombre_dia' => 'miercoles', 'created_at' => now(), 'updated_at' => now()],
+            ['nombre_dia' => 'jueves',    'created_at' => now(), 'updated_at' => now()],
+            ['nombre_dia' => 'viernes',   'created_at' => now(), 'updated_at' => now()],
+            ['nombre_dia' => 'sabado',    'created_at' => now(), 'updated_at' => now()],
         ]);
 
         // ── Departamentos ──────────────────────────────────────────────
@@ -139,11 +139,13 @@ class SeederDatosPrueba extends Seeder
         ]);
 
         // Actividad-Carrera: todas las carreras pueden acceder a todas las actividades
-        foreach (range(1, 5) as $actividad) {
-            foreach (range(1, 10) as $carrera) {
-                DB::table('ACTIVIDAD_CARRERA')->insert([
-                    'id_actividad' => $actividad,
-                    'id_carrera'   => $carrera,
+        $actividadIds = DB::table('actividad_complementaria')->pluck('id_actividad')->toArray();
+        $carreraIds   = DB::table('carrera')->pluck('id_carrera')->toArray();
+        foreach ($actividadIds as $idActividad) {
+            foreach ($carreraIds as $idCarrera) {
+                DB::table('actividad_carrera')->insert([
+                    'id_actividad' => $idActividad,
+                    'id_carrera'   => $idCarrera,
                 ]);
             }
         }

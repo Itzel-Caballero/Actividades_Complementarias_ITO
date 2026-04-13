@@ -26,6 +26,6 @@ class ActividadComplementaria extends Model
 
     public function carreras()
     {
-        return $this->belongsToMany(Carrera::class, 'ACTIVIDAD_CARRERA', 'id_actividad', 'id_carrera');
+        return $this->belongsToMany(Carrera::class, 'actividad_carrera', 'id_actividad', 'id_carrera');
     }
 }

@@ -1,4 +1,5 @@
 @extends('layouts.app')
+@section('title', 'Gestión de Actividades')
 
 @section('content')
 <section class="section">
@@ -7,9 +8,9 @@
     </div>
     <div class="section-body">
 
-        @if ($message = Session::get('success'))
+        @if(session('success'))
             <div class="alert alert-success alert-dismissible fade show">
-                <strong>{{ $message }}</strong>
+                <strong>{{ session('success') }}</strong>
                 <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
             </div>
         @endif
@@ -18,17 +19,14 @@
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h4>Actividades Complementarias</h4>
                 <div>
-                    <a href="{{ route('grupos.index') }}" class="btn btn-secondary btn-sm mr-2">
-                        <i class="fa fa-users"></i> Gestión de Grupos
-                    </a>
                     <a href="{{ route('actividades.create') }}" class="btn btn-primary btn-sm">
                         <i class="fa fa-plus"></i> Nueva Actividad
                     </a>
                 </div>
             </div>
-            <div class="card-body">
+            <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-striped table-hover">
+                    <table class="table table-striped table-hover mb-0">
                         <thead class="thead-dark">
                             <tr>
                                 <th>#</th>
@@ -45,7 +43,7 @@
                             @forelse ($actividades as $actividad)
                             <tr>
                                 <td>{{ $loop->iteration }}</td>
-                                <td>{{ $actividad->nombre }}</td>
+                                <td><strong>{{ $actividad->nombre }}</strong></td>
                                 <td>{{ $actividad->departamento->nombre ?? 'N/A' }}</td>
                                 <td>
                                     <span class="badge badge-{{ $actividad->creditos == 2 ? 'success' : 'info' }}">
@@ -59,34 +57,74 @@
                                     </span>
                                 </td>
                                 <td>{{ $actividad->grupos->count() }}</td>
-                                <td>
+                                <td class="text-nowrap">
                                     <a href="{{ route('actividades.edit', $actividad->id_actividad) }}"
                                        class="btn btn-warning btn-sm">
                                         <i class="fa fa-edit"></i> Editar
                                     </a>
-                                    <form action="{{ route('actividades.destroy', $actividad->id_actividad) }}"
-                                          method="POST" style="display:inline-block"
-                                          onsubmit="return confirm('¿Eliminar esta actividad?')">
+                                    <button type="button" class="btn btn-danger btn-sm"
+                                            onclick="confirmarEliminar({{ $actividad->id_actividad }}, '{{ addslashes($actividad->nombre) }}', {{ $actividad->grupos->count() }})">
+                                        <i class="fa fa-trash"></i> Eliminar
+                                    </button>
+                                    <form id="form-delete-{{ $actividad->id_actividad }}"
+                                          action="{{ route('actividades.destroy', $actividad->id_actividad) }}"
+                                          method="POST" style="display:none;">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="btn btn-danger btn-sm">
-                                            <i class="fa fa-trash"></i> Eliminar
-                                        </button>
                                     </form>
                                 </td>
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="8" class="text-center">No hay actividades registradas.</td>
+                                <td colspan="8" class="text-center py-4 text-muted">No hay actividades registradas.</td>
                             </tr>
                             @endforelse
                         </tbody>
                     </table>
                 </div>
-                {!! $actividades->links() !!}
+                @if($actividades->hasPages())
+                    <div class="card-footer">{!! $actividades->links() !!}</div>
+                @endif
             </div>
         </div>
 
     </div>
 </section>
+@endsection
+
+@section('scripts')
+<script>
+function confirmarEliminar(id, nombre, cantGrupos) {
+    let mensaje = '¿Estás seguro de eliminar la actividad <strong>' + nombre + '</strong>?';
+    if (cantGrupos > 0) {
+        mensaje += '<br><br><span class="text-danger"><i class="fas fa-exclamation-triangle"></i> Esta actividad tiene <strong>' + cantGrupos + ' grupo(s)</strong> asociados. Se eliminarán también sus horarios e inscripciones.</span>';
+    }
+
+    swal({
+        title: 'Eliminar actividad',
+        content: (function() {
+            const div = document.createElement('div');
+            div.innerHTML = mensaje;
+            return div;
+        })(),
+        icon: 'warning',
+        buttons: {
+            cancel: {
+                text: 'Cancelar',
+                visible: true,
+                className: 'btn btn-secondary',
+            },
+            confirm: {
+                text: 'Sí, eliminar',
+                className: 'btn btn-danger',
+            }
+        },
+        dangerMode: true,
+    }).then(function(confirmar) {
+        if (confirmar) {
+            document.getElementById('form-delete-' + id).submit();
+        }
+    });
+}
+</script>
 @endsection

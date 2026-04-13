@@ -6,31 +6,21 @@ use Illuminate\Support\Facades\Schema;
 
 class CreateCalificacionTable extends Migration
 {
-    /**
-     * Run the migrations.
-     *
-     * @return void
-     */
-   
-public function up(): void
-{
-    Schema::dropIfExists('calificacion');
-    
-    Schema::create('calificacion', function (Blueprint $table) {
-        $table->id('id_calificacion');
-        $table->unsignedBigInteger('id_inscripcion');
-        $table->enum('desempenio', ['malo', 'bueno', 'excelente'])->nullable();
-        $table->string('observaciones', 255)->nullable();
-        $table->timestamps();
+    public function up(): void
+    {
+        Schema::dropIfExists('calificacion');
 
-        $table->foreign('id_inscripcion')->references('id_inscripcion')->on('inscripcion');
-    });
-}
-    /**
-     * Reverse the migrations.
-     *
-     * @return void
-     */
+        Schema::create('calificacion', function (Blueprint $table) {
+            $table->id('id_calificacion');
+            $table->unsignedBigInteger('id_inscripcion');
+            $table->enum('desempenio', ['malo', 'bueno', 'excelente'])->nullable();
+            $table->string('observaciones', 255)->nullable();
+            $table->timestamps();
+
+            $table->foreign('id_inscripcion')->references('id_inscripcion')->on('inscripcion');
+        });
+    }
+
     public function down()
     {
         Schema::dropIfExists('calificacion');
