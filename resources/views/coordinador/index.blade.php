@@ -60,7 +60,7 @@
                 </div>
             </div>
             <div class="col-lg-3 col-md-6">
-                <div class="card bg-c-yellow order-card">
+                <div class="card bg-c-pink order-card">
                     <div class="card-block">
                         <h5>Alumnos Inscritos</h5>
                         <h2 class="text-right">
