@@ -23,6 +23,7 @@ class User extends Authenticatable
         'tipo_usuario',
         'num_control',
         'telefono',
+        'activo',
         'ultimo_acceso',
     ];
 
@@ -33,6 +34,7 @@ class User extends Authenticatable
 
     protected $casts = [
         'ultimo_acceso' => 'datetime',
+        'activo'        => 'boolean',
     ];
 
     public function getAuthPassword()

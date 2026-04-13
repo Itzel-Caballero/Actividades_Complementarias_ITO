@@ -5,4 +5,38 @@
  * 
  */
 
+/*
+ * ── Correcciones de submenú ──────────────────────────────────────
+ *
+ * El template Stisla maneja el toggle del menú lateral con su propio
+ * scripts.js (función sidebar_dropdown). Lo único que necesitamos
+ * asegurar es que los submenús estén cerrados por defecto y que al
+ * minimizar el sidebar también se cierren.
+ */
+
+/* 1. Submenús cerrados por defecto (Stisla ya hace slideDown/slideUp
+      sobre ul.dropdown-menu; esto refuerza el estado inicial) */
+.main-sidebar .sidebar-menu li ul.dropdown-menu {
+    display: none;
+}
+
+/* 2. Cuando el padre tiene .active, el dropdown-menu se muestra
+      (Stisla lo abre con slideDown; esta regla actúa de respaldo) */
+.main-sidebar .sidebar-menu li.active > ul.dropdown-menu {
+    display: block;
+}
+
+/* 3. Al minimizar (sidebar-mini): ocultar TODOS los submenús inline
+      para que no se vean al colapsar el sidebar */
+body.sidebar-mini .main-sidebar .sidebar-menu li ul.dropdown-menu {
+    display: none !important;
+}
+
+/* 4. En sidebar-mini los submenús aparecen flotando al hacer hover
+      (comportamiento nativo de Stisla - solo aseguramos z-index) */
+body.sidebar-mini .main-sidebar .sidebar-menu li:hover > ul.dropdown-menu {
+    display: block !important;
+    z-index: 999;
+}
+
 /*# sourceMappingURL=custom.css.map */

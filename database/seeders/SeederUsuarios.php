@@ -94,6 +94,63 @@ class SeederUsuarios extends Seeder
             ]);
         }
 
+        // ── 100 alumnos de prueba ─────────────────────────────────────────────
+        $nombres = [
+            'Alejandro','Brenda','Carlos','Diana','Eduardo','Fernanda','Gabriel','Hilda',
+            'Iván','Juana','Kevin','Laura','Miguel','Ángela','Omar','Patricia','Quirino',
+            'Rosa','Salvador','Teresa','Ulises','Valeria','Waldo','Ximena','Yair','Zara',
+            'Arturo','Beatriz','César','Dalia','Ernesto','Flor','Gerardo','Helena',
+            'Isaac','Judith','Luis','María','Nicolás','Olga','Pablo','Rebeca','Santiago',
+            'Tania','Uriel','Verónica','Xavier','Yolanda','Zaira','Alfredo',
+        ];
+        $apellidos_p = [
+            'García','López','Martínez','Sánchez','Rodríguez','Pérez','González','Hernández',
+            'Jiménez','Flores','Díaz','Torres','Ramírez','Morales','Reyes','Cruz','Mendoza',
+            'Ortiz','Castillo','Guerrero','Vargas','Ramos','Alvarado','Cervantes','Soto',
+        ];
+        $apellidos_m = [
+            'Luna','Vega','Castro','Salinas','Fuentes','Escobar','Mora','Tapia',
+            'Guérrero','Nava','Bravo','Ibarra','Palma','Delgado','Montes','Avila',
+            'Rios','Cabrera','Herrera','Medina','Ponce','Aguilar','Bernal','Cisneros',
+        ];
+
+        $carreras = DB::table('carrera')->pluck('id_carrera')->toArray();
+        $semestres = [1,2,3,4,5,6,7,8,9];
+        $role = \Spatie\Permission\Models\Role::findByName('alumno');
+
+        for ($i = 1; $i <= 100; $i++) {
+            $nombre    = $nombres[array_rand($nombres)];
+            $ap        = $apellidos_p[array_rand($apellidos_p)];
+            $am        = $apellidos_m[array_rand($apellidos_m)];
+            $numCtrl   = '2024' . str_pad($i, 4, '0', STR_PAD_LEFT);
+            $email     = 'alumno' . str_pad($i, 3, '0', STR_PAD_LEFT) . '@gmail.com';
+            $idCarrera = $carreras[array_rand($carreras)];
+            $semestre  = $semestres[array_rand($semestres)];
+
+            $nuevoAlumno = User::create([
+                'nombre'           => $nombre,
+                'apellido_paterno' => $ap,
+                'apellido_materno' => $am,
+                'email'            => $email,
+                'contrasena'       => Hash::make('123456'),
+                'tipo_usuario'     => 'alumno',
+                'num_control'      => $numCtrl,
+                'telefono'         => '951' . rand(1000000, 9999999),
+                'ultimo_acceso'    => null,
+            ]);
+
+            $nuevoAlumno->assignRole('alumno');
+
+            DB::table('alumno')->insert([
+                'id_alumno'           => $nuevoAlumno->id,
+                'id_carrera'          => $idCarrera,
+                'semestre_cursando'   => $semestre,
+                'creditos_acumulados' => rand(0, 10),
+                'created_at'          => now(),
+                'updated_at'          => now(),
+            ]);
+        }
+
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
     }
 }

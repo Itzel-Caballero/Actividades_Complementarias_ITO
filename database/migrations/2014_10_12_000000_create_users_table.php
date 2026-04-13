@@ -19,6 +19,7 @@ class CreateUsersTable extends Migration
             $table->string('apellido_paterno', 100)->nullable();
             $table->string('apellido_materno', 100)->nullable();
             $table->string('telefono', 20)->nullable();
+            $table->boolean('activo')->default(true);
             $table->rememberToken();
             $table->timestamps();
         });

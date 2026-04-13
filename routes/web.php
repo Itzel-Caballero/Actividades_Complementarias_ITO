@@ -10,6 +10,11 @@ use App\Http\Controllers\InscripcionController;
 use App\Http\Controllers\PerfilController;
 use App\Http\Controllers\GrupoController;
 use App\Http\Controllers\CoordinadorController;
+use App\Http\Controllers\Admin\CarreraController;
+use App\Http\Controllers\Admin\SemestreController;
+use App\Http\Controllers\Admin\DepartamentoController;
+use App\Http\Controllers\Admin\UbicacionController;
+use App\Http\Controllers\Admin\ReporteController;
 
 
 Route::get('/', function () {
@@ -53,6 +58,7 @@ Route::middleware(['auth'])->group(function () {
     // Rutas existentes del proyecto
     Route::resource('roles',    RolController::class);
     Route::resource('usuarios', UsuarioController::class);
+    Route::patch('/usuarios/{usuario}/toggle', [UsuarioController::class, 'toggle'])->name('usuarios.toggle');
     Route::resource('blogs',    BlogController::class);
 
     Route::resource('actividades', ActividadComplementariaController::class);
@@ -90,6 +96,21 @@ Route::middleware(['auth'])->group(function () {
 
         // AJAX: búsqueda de instructores
         Route::get('/api/instructores', [CoordinadorController::class, 'buscarInstructores'])->name('api.instructores');
+    });
+
+    // ─── Rutas del Administrador ──────────────────────────────────────────
+    Route::prefix('admin')->name('admin.')->middleware('role:admin')->group(function () {
+
+        // Estructura Académica
+        Route::resource('carreras',      CarreraController::class);
+        Route::resource('semestres',     SemestreController::class);
+        Route::resource('departamentos', DepartamentoController::class);
+        Route::resource('ubicaciones',   UbicacionController::class);
+
+        // Reportes / Solo lectura
+        Route::get('/reportes/alumnos',       [ReporteController::class, 'alumnos'])->name('reportes.alumnos');
+        Route::get('/reportes/inscripciones', [ReporteController::class, 'inscripciones'])->name('reportes.inscripciones');
+        Route::get('/reportes/accesos',       [ReporteController::class, 'accesos'])->name('reportes.accesos');
     });
 
 });

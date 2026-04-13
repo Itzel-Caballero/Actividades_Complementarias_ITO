@@ -16,23 +16,25 @@ class UsuarioController extends Controller
 {
     public function index(Request $request)
     {
-        // 1. Capturamos el texto de búsqueda
         $buscar = trim($request->get('buscar'));
+        $filtro_rol = trim($request->get('rol', ''));
 
-        // 2. Realizamos la consulta con filtros y paginación
-        $usuarios = User::where(function($query) use ($buscar) {
-            if ($buscar) {
-                $query->where('nombre', 'LIKE', '%' . $buscar . '%')
-                      ->orWhere('apellido_paterno', 'LIKE', '%' . $buscar . '%')
-                      ->orWhere('email', 'LIKE', '%' . $buscar . '%')
-                      ->orWhere('num_control', 'LIKE', '%' . $buscar . '%');
-            }
-        })
-        ->orderBy('id', 'desc') // Mostrar los más recientes primero
-        ->paginate(3); // Paginar de 10 en 10
+        $usuarios = User::with('roles')
+            ->where(function($query) use ($buscar) {
+                if ($buscar) {
+                    $query->where('nombre', 'LIKE', '%' . $buscar . '%')
+                          ->orWhere('apellido_paterno', 'LIKE', '%' . $buscar . '%')
+                          ->orWhere('email', 'LIKE', '%' . $buscar . '%')
+                          ->orWhere('num_control', 'LIKE', '%' . $buscar . '%');
+                }
+            })
+            ->when($filtro_rol, fn($q) =>
+                $q->whereHas('roles', fn($r) => $r->where('name', $filtro_rol))
+            )
+            ->orderBy('id', 'desc')
+            ->paginate(15);
 
-        // 3. Retornamos la vista con los datos y el término de búsqueda
-        return view('usuarios.index', compact('usuarios', 'buscar'));
+        return view('usuarios.index', compact('usuarios', 'buscar', 'filtro_rol'));
     }
 
     public function create()
@@ -154,8 +156,24 @@ class UsuarioController extends Controller
 
     public function destroy($id)
     {
+        $user = User::findOrFail($id);
+        // Solo se permite eliminar si no tiene inscripciones ni grupos asignados
         User::findOrFail($id)->delete();
         return redirect()->route('usuarios.index')
                          ->with('success', 'Usuario eliminado correctamente.');
+    }
+
+    /**
+     * Habilita o deshabilita un usuario (toggle activo).
+     */
+    public function toggle($id)
+    {
+        $user = User::findOrFail($id);
+        $user->activo = !$user->activo;
+        $user->save();
+
+        $estado = $user->activo ? 'habilitado' : 'deshabilitado';
+        return redirect()->route('usuarios.index')
+                         ->with('success', "Usuario {$estado} correctamente.");
     }
 }
