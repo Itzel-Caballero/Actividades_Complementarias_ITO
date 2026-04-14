@@ -10,6 +10,7 @@ use App\Http\Controllers\InscripcionController;
 use App\Http\Controllers\PerfilController;
 use App\Http\Controllers\GrupoController;
 use App\Http\Controllers\CoordinadorController;
+use App\Http\Controllers\InstructorController;
 use App\Http\Controllers\Admin\CarreraController;
 use App\Http\Controllers\Admin\SemestreController;
 use App\Http\Controllers\Admin\DepartamentoController;
@@ -39,16 +40,26 @@ Route::get('/debug-user', function () {
 Route::middleware(['auth'])->group(function () {
 
     Route::get('/home', [HomeController::class, 'index'])->name('home');
-    Route::get('/alumno/dashboard',      fn() => view('home'))->name('alumno.dashboard');
-    Route::get('/instructor/dashboard',  fn() => view('home'))->name('instructor.dashboard');
-    Route::get('/admin/dashboard',       fn() => view('home'))->name('admin.dashboard');
+    Route::get('/alumno/dashboard',     fn() => view('home'))->name('alumno.dashboard');
+    Route::get('/admin/dashboard',      fn() => view('home'))->name('admin.dashboard');
 
-    Route::resource('roles',    RolController::class);
-    Route::resource('usuarios', UsuarioController::class);
+    // ─── Instructor ───────────────────────────────────────────────────────
+    Route::prefix('instructor')->name('instructor.')->group(function () {
+        Route::get('/mis-grupos', [InstructorController::class, 'misGrupos'])
+             ->name('mis-grupos');
+        Route::get('/calificar/{id_inscripcion}', [InstructorController::class, 'calificar'])
+             ->name('calificar');
+        Route::put('/calificar/{id_inscripcion}', [InstructorController::class, 'guardarCalificacion'])
+             ->name('guardarCalificacion');
+    });
+
+    // ─── Recursos generales ───────────────────────────────────────────────
+    Route::resource('roles',       RolController::class);
+    Route::resource('usuarios',    UsuarioController::class);
     Route::patch('/usuarios/{usuario}/toggle', [UsuarioController::class, 'toggle'])->name('usuarios.toggle');
-    Route::resource('blogs',    BlogController::class);
+    Route::resource('blogs',       BlogController::class);
     Route::resource('actividades', ActividadComplementariaController::class);
-    Route::resource('grupos', GrupoController::class);
+    Route::resource('grupos',      GrupoController::class);
     Route::patch('/grupos/{grupo}/asignar-instructor', [GrupoController::class, 'asignarInstructor'])->name('grupos.asignar-instructor');
 
     Route::post('/perfil/actualizar', [PerfilController::class, 'update'])->name('perfil.update');
@@ -62,7 +73,6 @@ Route::middleware(['auth'])->group(function () {
 
         Route::get('/',  [CoordinadorController::class, 'index'])->name('index');
 
-        // Grupos
         Route::get('/grupos',             [CoordinadorController::class, 'grupos'])->name('grupos');
         Route::get('/grupos/crear',       [CoordinadorController::class, 'createGrupo'])->name('grupos.create');
         Route::post('/grupos',            [CoordinadorController::class, 'storeGrupo'])->name('grupos.store');
@@ -71,17 +81,11 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/grupos/{id}',     [CoordinadorController::class, 'destroyGrupo'])->name('grupos.destroy');
         Route::post('/grupos/{id}/instructor', [CoordinadorController::class, 'asignarInstructor'])->name('grupos.asignar_instructor');
 
-        // Actividades
         Route::get('/actividades', [CoordinadorController::class, 'actividades'])->name('actividades');
-
-        // Docentes
-        Route::get('/docentes', [CoordinadorController::class, 'docentes'])->name('docentes');
-
-        // Alumnos
-        Route::get('/alumnos',  [CoordinadorController::class, 'alumnos'])->name('alumnos');
+        Route::get('/docentes',    [CoordinadorController::class, 'docentes'])->name('docentes');
+        Route::get('/alumnos',     [CoordinadorController::class, 'alumnos'])->name('alumnos');
         Route::post('/alumnos/{inscripcion}/baja', [CoordinadorController::class, 'darBajaAlumno'])->name('alumnos.baja');
 
-        // AJAX
         Route::get('/api/instructores',           [CoordinadorController::class, 'buscarInstructores'])->name('api.instructores');
         Route::get('/api/instructores-actividad', [CoordinadorController::class, 'instructoresPorActividad'])->name('api.instructores_actividad');
     });

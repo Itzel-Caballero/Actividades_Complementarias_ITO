@@ -10,7 +10,6 @@
 {{-- ═══════════════════════════════════════════════════════════════ --}}
 @role('admin')
 
-{{-- 1. Gestión de Identidades y Acceso --}}
 <li class="{{ Request::is('usuarios*') || Request::is('roles*') || Request::is('admin/reportes/accesos*') ? 'active' : '' }}">
     <a class="nav-link has-dropdown" href="#">
         <i class="fas fa-user-shield"></i><span>Identidades y Acceso</span>
@@ -34,7 +33,6 @@
     </ul>
 </li>
 
-{{-- 2. Estructura Académica --}}
 <li class="{{ Request::is('admin/carreras*') || Request::is('admin/semestres*') || Request::is('admin/departamentos*') ? 'active' : '' }}">
     <a class="nav-link has-dropdown" href="#">
         <i class="fas fa-university"></i><span>Estructura Académica</span>
@@ -58,7 +56,6 @@
     </ul>
 </li>
 
-{{-- 3. Recursos e Infraestructura --}}
 <li class="{{ Request::is('admin/ubicaciones*') ? 'active' : '' }}">
     <a class="nav-link has-dropdown" href="#">
         <i class="fas fa-map-marked-alt"></i><span>Infraestructura</span>
@@ -72,7 +69,6 @@
     </ul>
 </li>
 
-{{-- 4. Reportes Globales --}}
 <li class="{{ Request::is('admin/reportes*') ? 'active' : '' }}">
     <a class="nav-link has-dropdown" href="#">
         <i class="fas fa-chart-bar"></i><span>Reportes Globales</span>
@@ -90,7 +86,6 @@
         </li>
     </ul>
 </li>
-
 
 @endrole
 
@@ -114,9 +109,9 @@
 {{-- Menú para INSTRUCTOR                                           --}}
 {{-- ═══════════════════════════════════════════════════════════════ --}}
 @role('instructor')
-<li class="{{ Request::is('actividades*') ? 'active' : '' }}">
-    <a class="nav-link" href="/actividades">
-        <i class="fas fa-chalkboard-teacher"></i><span>Actividades</span>
+<li class="{{ Request::is('instructor/mis-grupos*') ? 'active' : '' }}">
+    <a class="nav-link" href="{{ route('instructor.mis-grupos') }}">
+        <i class="fas fa-chalkboard-teacher"></i><span>Mis Grupos</span>
     </a>
 </li>
 @endrole

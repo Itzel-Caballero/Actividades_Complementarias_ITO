@@ -19,16 +19,14 @@ class LoginController extends Controller
 
     protected function authenticated(Request $request, $user)
     {
-        // Limpiar caché de permisos de Spatie
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
-        // Actualizar último acceso
         $user->update(['ultimo_acceso' => now()]);
 
         return match ($user->tipo_usuario) {
-            'admin'      => redirect()->route('admin.dashboard'),
-            'instructor' => redirect()->route('instructor.dashboard'),
-            default      => redirect()->route('alumno.dashboard'),
+            'admin'      => redirect()->route('home'),
+            'instructor' => redirect()->route('instructor.mis-grupos'),
+            default      => redirect()->route('home'),
         };
     }
 }
