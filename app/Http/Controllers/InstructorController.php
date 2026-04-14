@@ -93,10 +93,13 @@ class InstructorController extends Controller
             403
         );
 
+        // Convertir 0/1 al valor ENUM que espera la base de datos
+        $desempenioEnum = $request->desempenio == 1 ? 'bueno' : 'malo';
+
         Calificacion::updateOrCreate(
             ['id_inscripcion' => $id_inscripcion],
             [
-                'desempenio'    => (int) $request->desempenio,
+                'desempenio'    => $desempenioEnum,
                 'observaciones' => $request->observaciones,
             ]
         );

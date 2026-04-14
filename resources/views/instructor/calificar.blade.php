@@ -175,8 +175,8 @@
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const val = document.getElementById('desempenio').value;
-        if (val === '1') resaltarTarjeta(1);
-        else if (val === '0') resaltarTarjeta(0);
+        if (val === '1' || val === 'bueno' || val === 'excelente') resaltarTarjeta(1);
+        else if (val === '0' || val === 'malo') resaltarTarjeta(0);
     });
 
     function seleccionarDesempenio(valor) {
