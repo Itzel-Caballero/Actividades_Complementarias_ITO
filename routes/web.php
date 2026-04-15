@@ -99,6 +99,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/reportes/alumnos',       [ReporteController::class, 'alumnos'])->name('reportes.alumnos');
         Route::get('/reportes/inscripciones', [ReporteController::class, 'inscripciones'])->name('reportes.inscripciones');
         Route::get('/reportes/accesos',       [ReporteController::class, 'accesos'])->name('reportes.accesos');
+        Route::post('/admin/semestres', [SemestreController::class, 'store'])->name('admin.semestres.store');
     });
 
 });

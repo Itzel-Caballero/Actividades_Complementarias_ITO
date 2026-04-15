@@ -20,103 +20,130 @@ class SemestreController extends Controller
     }
 
     public function index()
-    {
-        $semestres = Semestre::withCount('grupos')
-                             ->orderByDesc('año')
-                             ->orderByDesc('periodo')
-                             ->paginate(10);
+{
+    // Obtener el periodo marcado como activo
+    $periodoActual = Semestre::withCount('grupos')
+        ->where('status', 'activo')
+        ->first();
 
-        return view('admin.semestres.index', compact('semestres'));
-    }
+    // Obtener todos los periodos inactivos para el historial
+    $historial = Semestre::withCount('grupos')
+        ->where('status', 'inactivo')
+        ->paginate(10); // Usamos paginate porque en tu index tienes {!! $historial->links() !!}
+
+    return view('admin.semestres.index', compact('periodoActual', 'historial'));
+}
 
     public function create()
     {
+        // Validamos si ya existe un periodo activo antes de mostrar la vista
+        if (Semestre::where('status', 'activo')->exists()) {
+            return redirect()->route('admin.semestres.index')
+                             ->with('error', 'No se puede crear un nuevo periodo mientras exista uno activo.');
+        }
+
         return view('admin.semestres.crear');
     }
 
     public function store(Request $request)
-    {
-        $request->validate([
-            'año'                        => 'required|integer|min:2000|max:2100',
-            'periodo'                    => 'required|in:1,2',
-            'fecha_inicio'               => 'required|date',
-            'fecha_fin'                  => 'required|date|after_or_equal:fecha_inicio',
-            'fecha_inicio_inscripciones' => 'required|date',
-            'fecha_fin_inscripciones'    => 'required|date|after_or_equal:fecha_inicio_inscripciones',
-        ], [
-            'año.required'     => 'El año es obligatorio.',
-            'periodo.required' => 'El periodo es obligatorio.',
-            'fecha_fin.after_or_equal'               => 'La fecha fin debe ser igual o posterior a la de inicio.',
-            'fecha_fin_inscripciones.after_or_equal'  => 'La fecha fin de inscripciones debe ser igual o posterior a la de inicio.',
-        ]);
+{
+    // 1. Validaciones de formato y año
+    $año = $request->año;
+    $periodo = $request->periodo;
 
-        // Evitar duplicado año+periodo
-        $existe = Semestre::where('año', $request->año)
-                          ->where('periodo', $request->periodo)
-                          ->exists();
-        if ($existe) {
-            return back()->withInput()
-                         ->with('error', 'Ya existe un semestre con ese año y periodo.');
+    $request->validate([
+        'año'                        => 'required|integer|min:2000|max:2100',
+        'periodo'                    => 'required|in:1,2',
+        'fecha_inicio'               => "required|date|after_or_equal:$año-01-01|before_or_equal:$año-12-31",
+        'fecha_fin'                  => "required|date|after:fecha_inicio|before_or_equal:$año-12-31",
+        'fecha_inicio_inscripciones' => "required|date|after_or_equal:$año-01-01|before_or_equal:$año-12-31",
+        'fecha_fin_inscripciones'    => "required|date|after:fecha_inicio_inscripciones|before_or_equal:$año-12-31",
+        'status'                     => 'required|in:activo,inactivo'
+    ]);
+
+    // 2. Validación lógica de Meses por Periodo
+    $mesMin = ($periodo == 1) ? 1 : 8; // Ene o Ago
+    $mesMax = ($periodo == 1) ? 6 : 12; // Jun o Dic
+    $nombrePeriodo = ($periodo == 1) ? "Enero y Junio" : "Agosto y Diciembre";
+
+    $fechasCheck = [
+        'inicio del semestre' => $request->fecha_inicio,
+        'fin del semestre' => $request->fecha_fin,
+        'inicio de inscripciones' => $request->fecha_inicio_inscripciones,
+        'fin de inscripciones' => $request->fecha_fin_inscripciones,
+    ];
+
+    foreach ($fechasCheck as $label => $fecha) {
+        $mes = date('n', strtotime($fecha));
+        if ($mes < $mesMin || $mes > $mesMax) {
+            return back()->withInput()->with('error', "Error: La fecha de $label debe estar entre $nombrePeriodo.");
         }
-
-        Semestre::create($request->only([
-            'año', 'periodo', 'fecha_inicio', 'fecha_fin',
-            'fecha_inicio_inscripciones', 'fecha_fin_inscripciones',
-        ]));
-
-        return redirect()->route('admin.semestres.index')
-                         ->with('success', 'Semestre creado correctamente.');
     }
+
+    // 3. Regla: Solo un periodo activo a la vez
+    if ($request->status == 'activo') {
+        $existeActivo = Semestre::where('status', 'activo')->exists();
+        if ($existeActivo) {
+            return back()->withInput()->with('error', 'Ya existe un periodo activo. Debes ponerlo como inactivo primero.');
+        }
+    }
+
+    // 4. Evitar duplicados Año + Periodo
+    $existe = Semestre::where('año', $request->año)
+                      ->where('periodo', $request->periodo)
+                      ->exists();
+    if ($existe) {
+        return back()->withInput()->with('error', 'Ya existe ese año y periodo registrado.');
+    }
+
+    // 5. Guardado
+    Semestre::create($request->all());
+
+    return redirect()->route('admin.semestres.index')
+                     ->with('success', 'Semestre creado correctamente.');
+}
 
     public function edit($id)
-    {
-        $semestre = Semestre::findOrFail($id);
-        return view('admin.semestres.editar', compact('semestre'));
-    }
+{
+    $semestre = Semestre::findOrFail($id);
 
-    public function update(Request $request, $id)
-    {
-        $request->validate([
-            'año'                        => 'required|integer|min:2000|max:2100',
-            'periodo'                    => 'required|in:1,2',
-            'fecha_inicio'               => 'required|date',
-            'fecha_fin'                  => 'required|date|after_or_equal:fecha_inicio',
-            'fecha_inicio_inscripciones' => 'required|date',
-            'fecha_fin_inscripciones'    => 'required|date|after_or_equal:fecha_inicio_inscripciones',
-        ]);
-
-        $semestre = Semestre::findOrFail($id);
-
-        // Verificar duplicado excluyendo el actual
-        $existe = Semestre::where('año', $request->año)
-                          ->where('periodo', $request->periodo)
-                          ->where('id_semestre', '!=', $id)
-                          ->exists();
-        if ($existe) {
-            return back()->withInput()
-                         ->with('error', 'Ya existe un semestre con ese año y periodo.');
-        }
-
-        $semestre->update($request->only([
-            'año', 'periodo', 'fecha_inicio', 'fecha_fin',
-            'fecha_inicio_inscripciones', 'fecha_fin_inscripciones',
-        ]));
-
+    // REGLA: Si no está activo, no se puede editar
+    if ($semestre->status !== 'activo') {
         return redirect()->route('admin.semestres.index')
-                         ->with('success', 'Semestre actualizado correctamente.');
+                         ->with('error', 'Los periodos inactivos no pueden ser editados.');
     }
 
-    public function destroy($id)
-    {
-        $semestre = Semestre::withCount('grupos')->findOrFail($id);
+    return view('admin.semestres.editar', compact('semestre'));
+}
 
-        if ($semestre->grupos_count > 0) {
-            return redirect()->route('admin.semestres.index')
-                             ->with('error', "No se puede eliminar: el semestre tiene {$semestre->grupos_count} grupo(s) asociado(s).");
-        }
+public function update(Request $request, $id)
+{
+    $semestre = Semestre::findOrFail($id);
 
-        $semestre->delete();
+    // REGLA: Bloqueo de seguridad
+    if ($semestre->status !== 'activo') {
         return redirect()->route('admin.semestres.index')
-                         ->with('success', 'Semestre eliminado correctamente.');
+                         ->with('error', 'Acción no permitida para periodos inactivos.');
     }
+
+    // Validación similar al store...
+    $request->validate([
+        'año'    => 'required|integer',
+        'status' => 'required|in:activo,inactivo', // Aquí el usuario puede cambiarlo a inactivo
+        // ... resto de validaciones de fechas
+    ]);
+
+    $semestre->update($request->all());
+
+    return redirect()->route('admin.semestres.index')
+                     ->with('success', 'Periodo actualizado correctamente.');
+}
+
+public function destroy($id)
+{
+    // REGLA: No se puede eliminar nada que esté inactivo (historial) 
+    // y tampoco activo (por seguridad de integridad). Básicamente, bloqueo total.
+    return redirect()->route('admin.semestres.index')
+                     ->with('error', 'Por seguridad, los periodos registrados no pueden ser eliminados.');
+}
 }

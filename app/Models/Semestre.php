@@ -8,10 +8,15 @@ class Semestre extends Model
     protected $table      = 'semestre';
     protected $primaryKey = 'id_semestre';
 
-    protected $fillable = [
-        'año', 'periodo', 'fecha_inicio', 'fecha_fin',
-        'fecha_inicio_inscripciones', 'fecha_fin_inscripciones',
-    ];
+  protected $fillable = [
+    'año', 
+    'periodo', 
+    'fecha_inicio', 
+    'fecha_fin', 
+    'fecha_inicio_inscripciones', 
+    'fecha_fin_inscripciones',
+    'status', // <--- Agrega esto si no está
+];
 
     public function grupos()
     {
