@@ -4,7 +4,7 @@
 @section('content')
 <section class="section">
     <div class="section-header">
-        <h3 class="page__heading">Gestión de Semestres ses</h3>
+        <h3 class="page__heading">Gestión de Semestres</h3>
     </div>
     <div class="section-body">
 
@@ -106,11 +106,11 @@
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h4 class="mb-0">Historial de Periodos Pasados</h4>
-                @if(!$periodoActual)
+                <!-- @if(!$periodoActual)
                     <a href="{{ route('admin.semestres.create') }}" class="btn btn-primary btn-sm">
                         <i class="fa fa-plus"></i> Nuevo Periodo
                     </a>
-                @endif
+                @endif -->
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">

@@ -23,7 +23,7 @@
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-3">
-                        <strong>Inicio del semestrejkhjvb:</strong><br>
+                        <strong>Inicio del semestre:</strong><br>
                         {{ \Carbon\Carbon::parse($semestre->fecha_inicio)->format('d/m/Y') }}
                     </div>
                     <div class="col-md-3">
