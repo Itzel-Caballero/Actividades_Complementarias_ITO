@@ -1,12 +1,14 @@
 @extends('layouts.app')
-@if (session('error'))
-    <div class="alert alert-danger alert-dismissible fade show">
-        {{ session('error') }}
-        <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
-    </div>
-@endif
+@section('title', 'Nuevo Periodo Escolar')
 
-@section('title', 'Nuevo Semestre')
+@section('page_css')
+<style>
+.section-label { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
+.regla-hint { font-size: 12px; color: #6c757d; margin-top: 4px; }
+.regla-hint.ok  { color: #28a745; }
+.regla-hint.err { color: #dc3545; }
+</style>
+@endsection
 
 @section('content')
 <section class="section">
@@ -15,47 +17,44 @@
     </div>
     <div class="section-body">
         <div class="row">
-            <div class="col-lg-8 offset-lg-2">
+            <div class="col-lg-9 offset-lg-1">
                 <div class="card">
                     <div class="card-header">
-                        <h4><i class="fas fa-calendar-plus mr-2"></i>Abrir Nuevo Periodo Escolar</h4>
+                        <h4><i class="fas fa-calendar-plus mr-2 text-primary"></i>Abrir Nuevo Periodo Escolar</h4>
                     </div>
                     <div class="card-body">
 
-                        @if ($errors->any())
+                        @if($errors->any())
                             <div class="alert alert-danger alert-dismissible fade show">
                                 <ul class="mb-0">
-                                    @foreach ($errors->all() as $e)
-                                        <li>{{ $e }}</li>
-                                    @endforeach
+                                    @foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach
                                 </ul>
                                 <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
                             </div>
                         @endif
-                        
-                        @if ($message = Session::get('error'))
-                            <div class="alert alert-danger"><strong>{{ $message }}</strong></div>
+                        @if(session('error'))
+                            <div class="alert alert-danger"><strong>{{ session('error') }}</strong></div>
                         @endif
 
-                        <form action="{{ route('admin.semestres.store') }}" method="POST">
+                        <form action="{{ route('admin.semestres.store') }}" method="POST" id="form-semestre">
                             @csrf
 
+                            {{-- Año, Periodo, Estatus --}}
                             <div class="row">
                                 <div class="col-md-4">
                                     <div class="form-group">
                                         <label>Año <span class="text-danger">*</span></label>
                                         <input type="number" name="año" id="input_año" class="form-control"
-                                               value="{{ old('año', date('Y')) }}"
-                                               min="2000" max="2100" required>
+                                               value="{{ old('año', date('Y')) }}" min="2000" max="2100" required>
                                     </div>
                                 </div>
                                 <div class="col-md-4">
                                     <div class="form-group">
                                         <label>Periodo <span class="text-danger">*</span></label>
-                                        <select name="periodo" class="form-control" required>
+                                        <select name="periodo" id="select_periodo" class="form-control" required>
                                             <option value="">-- Selecciona --</option>
-                                            <option value="1" {{ old('periodo') == '1' ? 'selected' : '' }}>1 – Enero / Junio</option>
-                                            <option value="2" {{ old('periodo') == '2' ? 'selected' : '' }}>2 – Agosto / Diciembre</option>
+                                            <option value="1" {{ old('periodo')=='1'?'selected':'' }}>1 – Enero / Junio</option>
+                                            <option value="2" {{ old('periodo')=='2'?'selected':'' }}>2 – Agosto / Diciembre</option>
                                         </select>
                                     </div>
                                 </div>
@@ -63,47 +62,79 @@
                                     <div class="form-group">
                                         <label>Estatus <span class="text-danger">*</span></label>
                                         <select name="status" class="form-control" required>
-                                            <option value="activo" {{ old('status') == 'activo' ? 'selected' : '' }}>Activo</option>
-                                            <option value="inactivo" {{ old('status', 'inactivo') == 'inactivo' ? 'selected' : '' }}>Inactivo</option>
+                                            <option value="activo"   {{ old('status','activo')=='activo'   ?'selected':'' }}>Activo</option>
+                                            <option value="inactivo" {{ old('status')=='inactivo'?'selected':'' }}>Inactivo</option>
                                         </select>
                                     </div>
                                 </div>
                             </div>
 
                             <hr>
-                            <h6 class="text-primary"><i class="fas fa-calendar-alt mr-1"></i> Fechas del Semestre</h6>
+                            {{-- Fechas del Semestre --}}
+                            <h6 class="text-primary section-label"><i class="fas fa-calendar-alt mr-1"></i> Fechas del Semestre</h6>
+                            <p class="regla-hint"><i class="fas fa-info-circle"></i> La duración debe ser entre 3 y 5 meses.</p>
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label>Fecha de Inicio <span class="text-danger">*</span></label>
-                                        <input type="date" name="fecha_inicio" class="form-control date-restrict"
+                                        <input type="date" name="fecha_inicio" id="fecha_inicio"
+                                               class="form-control date-restrict"
                                                value="{{ old('fecha_inicio') }}" required>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label>Fecha de Fin <span class="text-danger">*</span></label>
-                                        <input type="date" name="fecha_fin" class="form-control date-restrict"
+                                        <input type="date" name="fecha_fin" id="fecha_fin"
+                                               class="form-control date-restrict"
                                                value="{{ old('fecha_fin') }}" required>
+                                        <small id="hint-semestre" class="regla-hint"></small>
                                     </div>
                                 </div>
                             </div>
 
                             <hr>
-                            <h6 class="text-success"><i class="fas fa-clipboard-list mr-1"></i> Período de Inscripciones</h6>
+                            {{-- Período de Inscripciones --}}
+                            <h6 class="text-success section-label"><i class="fas fa-clipboard-list mr-1"></i> Período de Inscripciones</h6>
+                            <p class="regla-hint"><i class="fas fa-info-circle"></i> Duración entre 5 y 10 días. Las fechas deben caer dentro del rango del semestre.</p>
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label>Inicio de Inscripciones <span class="text-danger">*</span></label>
-                                        <input type="date" name="fecha_inicio_inscripciones" class="form-control date-restrict"
+                                        <label>Fecha de Inicio de Inscripciones <span class="text-danger">*</span></label>
+                                        <input type="date" name="fecha_inicio_inscripciones" id="fecha_ini_insc"
+                                               class="form-control date-restrict"
                                                value="{{ old('fecha_inicio_inscripciones') }}" required>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label>Fin de Inscripciones <span class="text-danger">*</span></label>
-                                        <input type="date" name="fecha_fin_inscripciones" class="form-control date-restrict"
+                                        <label>Fecha de Fin de Inscripciones <span class="text-danger">*</span></label>
+                                        <input type="date" name="fecha_fin_inscripciones" id="fecha_fin_insc"
+                                               class="form-control date-restrict"
                                                value="{{ old('fecha_fin_inscripciones') }}" required>
+                                        <small id="hint-inscripcion" class="regla-hint"></small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Horas de Inscripciones --}}
+                            <div class="row mt-1">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Hora de Inicio de Inscripciones <span class="text-danger">*</span></label>
+                                        <input type="time" name="hora_inicio_inscripciones"
+                                               class="form-control"
+                                               value="{{ old('hora_inicio_inscripciones', '08:00') }}" required>
+                                        <small class="text-muted">Hora en que abren las inscripciones ese día.</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Hora de Fin de Inscripciones <span class="text-danger">*</span></label>
+                                        <input type="time" name="hora_fin_inscripciones"
+                                               class="form-control"
+                                               value="{{ old('hora_fin_inscripciones', '20:00') }}" required>
+                                        <small class="text-muted">Hora en que cierran las inscripciones ese día.</small>
                                     </div>
                                 </div>
                             </div>
@@ -117,57 +148,88 @@
                                 </button>
                             </div>
                         </form>
-
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </section>
+@endsection
 
+@section('scripts')
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const inputAño = document.getElementById('input_año');
-        const selectPeriodo = document.querySelector('select[name="periodo"]');
-        const inputsFecha = document.querySelectorAll('.date-restrict');
+document.addEventListener('DOMContentLoaded', function () {
+    const inputAño     = document.getElementById('input_año');
+    const selPeriodo   = document.getElementById('select_periodo');
+    const fechaInicio  = document.getElementById('fecha_inicio');
+    const fechaFin     = document.getElementById('fecha_fin');
+    const fechaIniInsc = document.getElementById('fecha_ini_insc');
+    const fechaFinInsc = document.getElementById('fecha_fin_insc');
+    const hintSem      = document.getElementById('hint-semestre');
+    const hintInsc     = document.getElementById('hint-inscripcion');
 
-        function actualizarLimites() {
-            const añoVal = inputAño.value;
-            const periodoVal = selectPeriodo.value;
+    // ── Restricción de fechas por periodo ─────────────────────────────────
+    function actualizarLimites() {
+        const año    = inputAño.value;
+        const per    = selPeriodo.value;
+        if (!año || año.length !== 4 || !per) return;
 
-            if (añoVal && añoVal.length === 4 && periodoVal) {
-                let minDate, maxDate;
+        const minDate = per == '1' ? `${año}-01-01` : `${año}-08-01`;
+        const maxDate = per == '1' ? `${año}-06-30` : `${año}-12-31`;
 
-                if (periodoVal == "1") {
-                    // Enero a Junio
-                    minDate = `${añoVal}-01-01`;
-                    maxDate = `${añoVal}-06-30`;
-                } else {
-                    // Agosto a Diciembre
-                    minDate = `${añoVal}-08-01`;
-                    maxDate = `${añoVal}-12-31`;
-                }
+        document.querySelectorAll('.date-restrict').forEach(function(inp) {
+            inp.min = minDate;
+            inp.max = maxDate;
+            if (inp.value && (inp.value < minDate || inp.value > maxDate)) inp.value = '';
+        });
+        validarSemestre();
+        validarInscripciones();
+    }
 
-                inputsFecha.forEach(input => {
-                    input.min = minDate;
-                    input.max = maxDate;
-
-                    // Validar si el valor actual quedó fuera del nuevo rango y limpiarlo
-                    if (input.value) {
-                        if (input.value < minDate || input.value > maxDate) {
-                            input.value = '';
-                        }
-                    }
-                });
-            }
+    // ── Validar duración del semestre (3–5 meses) ─────────────────────────
+    function validarSemestre() {
+        if (!fechaInicio.value || !fechaFin.value) { hintSem.textContent = ''; return; }
+        const d1   = new Date(fechaInicio.value);
+        const d2   = new Date(fechaFin.value);
+        const meses = (d2.getFullYear() - d1.getFullYear()) * 12 + (d2.getMonth() - d1.getMonth());
+        if (meses < 3) {
+            hintSem.className = 'regla-hint err';
+            hintSem.textContent = `⚠ Duración: ${meses} mes(es). Mínimo 3 meses.`;
+        } else if (meses > 5) {
+            hintSem.className = 'regla-hint err';
+            hintSem.textContent = `⚠ Duración: ${meses} meses. Máximo 5 meses.`;
+        } else {
+            hintSem.className = 'regla-hint ok';
+            hintSem.textContent = `✓ Duración: ${meses} mes(es). Válido.`;
         }
+    }
 
-        // Escuchar cambios en Año y en Periodo
-        inputAño.addEventListener('input', actualizarLimites);
-        selectPeriodo.addEventListener('change', actualizarLimites);
-        
-        // Ejecutar al inicio
-        actualizarLimites();
-    });
+    // ── Validar duración de inscripciones (5–10 días) ─────────────────────
+    function validarInscripciones() {
+        if (!fechaIniInsc.value || !fechaFinInsc.value) { hintInsc.textContent = ''; return; }
+        const d1   = new Date(fechaIniInsc.value);
+        const d2   = new Date(fechaFinInsc.value);
+        const dias = Math.round((d2 - d1) / (1000 * 60 * 60 * 24));
+        if (dias < 5) {
+            hintInsc.className = 'regla-hint err';
+            hintInsc.textContent = `⚠ ${dias} día(s). Mínimo 5 días.`;
+        } else if (dias > 10) {
+            hintInsc.className = 'regla-hint err';
+            hintInsc.textContent = `⚠ ${dias} días. Máximo 10 días.`;
+        } else {
+            hintInsc.className = 'regla-hint ok';
+            hintInsc.textContent = `✓ ${dias} día(s). Válido.`;
+        }
+    }
+
+    inputAño.addEventListener('input', actualizarLimites);
+    selPeriodo.addEventListener('change', actualizarLimites);
+    fechaInicio.addEventListener('change', function() { validarSemestre(); });
+    fechaFin.addEventListener('change', function() { validarSemestre(); });
+    fechaIniInsc.addEventListener('change', function() { validarInscripciones(); });
+    fechaFinInsc.addEventListener('change', function() { validarInscripciones(); });
+
+    actualizarLimites();
+});
 </script>
 @endsection
