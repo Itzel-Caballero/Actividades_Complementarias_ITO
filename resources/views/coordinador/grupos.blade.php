@@ -8,12 +8,16 @@
     </div>
     <div class="section-body">
 
-        @if(session('success'))
-            <div class="alert alert-success alert-dismissible fade show">
-                <strong>{{ session('success') }}</strong>
-                <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
-            </div>
-        @endif
+        @if(!$hasActiveSemestre)
+
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-triangle mr-2"></i>
+        <strong>No hay un período escolar activo.</strong> No es posible crear nuevos grupos en este momento.
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+@endif
 
         {{-- Leyenda indicador de cupo --}}
         <div class="d-flex align-items-center mb-2" style="gap:12px; font-size:13px;">
@@ -57,7 +61,7 @@
                         <a href="{{ route('coordinador.grupos') }}" class="btn btn-light btn-sm">
                             <i class="fa fa-times"></i>
                         </a>
-                        <a href="{{ route('coordinador.grupos.create') }}" class="btn btn-primary btn-sm ml-auto">
+                        <a href="{{ route('coordinador.grupos.create') }}" class="btn btn-primary btn-sm ml-auto {{ !$hasActiveSemestre ? 'disabled' : '' }}">
                             <i class="fa fa-plus"></i> Nuevo Grupo
                         </a>
                     </div>

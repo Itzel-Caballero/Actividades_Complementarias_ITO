@@ -233,13 +233,15 @@ const carrerasPorActiv  = @json($carrerasPorActividad);
 
 function actualizarCarreras(idActividad) {
     const contenedor = document.getElementById('carreras-lista');
-    const lista = idActividad ? (carrerasPorActiv[idActividad] || []) : [];
-    if (!idActividad) {
+    // Buscar con clave string (JSON siempre usa string como clave de objeto)
+    const key  = idActividad ? String(idActividad) : null;
+    const lista = key ? (carrerasPorActiv[key] || []) : [];
+    if (!key) {
         contenedor.innerHTML = '<p class="text-muted"><i class="fas fa-arrow-up mr-1"></i>Selecciona una actividad para ver las carreras permitidas.</p>';
         return;
     }
     if (lista.length === 0) {
-        contenedor.innerHTML = '<div class="alert alert-warning mb-0"><i class="fas fa-exclamation-triangle mr-1"></i>Esta actividad no tiene carreras asignadas.</div>';
+        contenedor.innerHTML = '<div class="alert alert-warning mb-0"><i class="fas fa-exclamation-triangle mr-1"></i>Esta actividad no tiene carreras asignadas. Edítala para agregarlas.</div>';
         return;
     }
     let html = '<div class="row">';
@@ -250,10 +252,21 @@ function actualizarCarreras(idActividad) {
     contenedor.innerHTML = html;
 }
 
+
 document.getElementById('sel-actividad').addEventListener('change', function() {
     const selected = this.options[this.selectedIndex];
     filtrarDocentes(selected ? parseInt(selected.dataset.depto) : null);
-    actualizarCarreras(this.value ? parseInt(this.value) : null);
+    actualizarCarreras(this.value || null);
+});
+
+// Select2 no dispara el evento change nativo: escuchar también el evento de jQuery
+$(document).ready(function() {
+    $('#sel-actividad').on('select2:select select2:clear', function() {
+        const val     = $(this).val();
+        const deptoId = val ? parseInt($(this).find(':selected').data('depto')) : null;
+        filtrarDocentes(deptoId);
+        actualizarCarreras(val || null);
+    });
 });
 
 function filtrarDocentes(deptoId) {
@@ -276,7 +289,10 @@ function filtrarDocentes(deptoId) {
 (function() {
     const sel = document.getElementById('sel-actividad');
     const opt = sel.options[sel.selectedIndex];
-    if (opt && opt.value) { filtrarDocentes(parseInt(opt.dataset.depto)||null); actualizarCarreras(parseInt(opt.value)); }
+    if (opt && opt.value) {
+        filtrarDocentes(parseInt(opt.dataset.depto)||null);
+        actualizarCarreras(opt.value);
+    }
 })();
 @endif
 
@@ -361,7 +377,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     updateHiddenInputs();
     const selAct=document.getElementById('sel-actividad');
-    if(selAct&&selAct.value) actualizarCarreras(parseInt(selAct.value));
+    if(selAct&&selAct.value) actualizarCarreras(selAct.value);
 });
 </script>
 @endsection

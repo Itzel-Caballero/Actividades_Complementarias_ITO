@@ -39,6 +39,8 @@ class CoordinadorController extends Controller
         $etiqueta = $periodo === 1 ? "Enero–Junio {$anio}" : "Agosto–Diciembre {$anio}";
         $clase    = $periodo === 1 ? 'semestre-ene-jun' : 'semestre-ago-dic';
 
+
+
         return ['id' => $semestre?->id_semestre, 'etiqueta' => $etiqueta, 'clase' => $clase, 'periodo' => $periodo, 'anio' => $anio];
     }
 
@@ -70,7 +72,10 @@ class CoordinadorController extends Controller
         $grupos        = $query->paginate(12)->withQueryString();
         $departamentos = Departamento::orderBy('nombre')->get();
 
-        return view('coordinador.grupos', compact('grupos', 'departamentos'));
+            $semestreActivo = Semestre::where('status', 'activo')->first();
+            $hasActiveSemestre = (bool) $semestreActivo;
+
+        return view('coordinador.grupos', compact('grupos', 'departamentos', 'hasActiveSemestre'));
     }
 
     public function createGrupo()
@@ -108,13 +113,16 @@ class CoordinadorController extends Controller
                 'depto'    => $i->departamento->nombre ?? 'N/A',
             ]);
 
-        // JSON de carreras por actividad para mostrarlas dinámicamente al seleccionar
-        $carrerasPorActividad = $actividades->mapWithKeys(fn($act) => [
-            $act->id_actividad => $act->carreras->map(fn($c) => [
+        // JSON de carreras por actividad — forzamos objeto con claves string
+        // para evitar que Laravel serialice como array indexado
+        $carrerasPorActividad = new \stdClass();
+        foreach ($actividades as $act) {
+            $key = (string) $act->id_actividad;
+            $carrerasPorActividad->$key = $act->carreras->map(fn($c) => [
                 'id'     => $c->id_carrera,
                 'nombre' => $c->nombre,
-            ])->values(),
-        ]);
+            ])->values()->toArray();
+        }
 
         return view('coordinador.create_grupo', compact(
             'actividades', 'instructores', 'ubicaciones',
