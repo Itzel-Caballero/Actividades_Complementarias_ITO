@@ -75,36 +75,65 @@ class CoordinadorController extends Controller
 
     public function createGrupo()
     {
-        $actividades    = ActividadComplementaria::with('departamento')->orderBy('nombre')->get();
-        $instructores   = Instructor::with(['usuario', 'departamento'])->get();
-        $semestres      = Semestre::orderByDesc('año')->orderByDesc('periodo')->get();
-        $ubicaciones    = Ubicacion::orderBy('espacio')->get();
-        $diasSemana     = DiaSemana::all();
-        $carreras       = Carrera::orderBy('nombre')->get();
-        $departamentos  = Departamento::orderBy('nombre')->get();
-        $semestreActual = $this->getSemestreActual();
+        // Solo se puede crear grupo si hay un semestre activo
+        $semestreActivo = Semestre::where('status', 'activo')->first();
+
+        if (!$semestreActivo) {
+            return redirect()->route('coordinador.grupos')
+                ->with('error', 'No hay un periodo escolar activo. No es posible crear grupos en este momento.');
+        }
+
+        $actividades   = ActividadComplementaria::with(['departamento', 'carreras'])->where('disponible', true)->orderBy('nombre')->get();
+        $instructores  = Instructor::with(['usuario', 'departamento'])->get();
+        $ubicaciones   = Ubicacion::orderBy('espacio')->get();
+        $diasSemana    = DiaSemana::all();
+        $departamentos = Departamento::orderBy('nombre')->get();
+
+        // Badge del semestre activo
+        $semestreActual = [
+            'id'       => $semestreActivo->id_semestre,
+            'etiqueta' => $semestreActivo->periodo == 1
+                ? "Enero–Junio {$semestreActivo->año}"
+                : "Agosto–Diciembre {$semestreActivo->año}",
+            'clase'    => $semestreActivo->periodo == 1 ? 'semestre-ene-jun' : 'semestre-ago-dic',
+        ];
 
         // JSON de instructores por departamento para el filtro dinámico
         $instructoresPorDepto = Instructor::with(['usuario', 'departamento'])
             ->get()
             ->map(fn($i) => [
-                'id'         => $i->id_instructor,
-                'nombre'     => $i->usuario->nombre_completo ?? 'Sin nombre',
-                'id_depto'   => $i->id_departamento,
-                'depto'      => $i->departamento->nombre ?? 'N/A',
+                'id'       => $i->id_instructor,
+                'nombre'   => $i->usuario->nombre_completo ?? 'Sin nombre',
+                'id_depto' => $i->id_departamento,
+                'depto'    => $i->departamento->nombre ?? 'N/A',
             ]);
 
+        // JSON de carreras por actividad para mostrarlas dinámicamente al seleccionar
+        $carrerasPorActividad = $actividades->mapWithKeys(fn($act) => [
+            $act->id_actividad => $act->carreras->map(fn($c) => [
+                'id'     => $c->id_carrera,
+                'nombre' => $c->nombre,
+            ])->values(),
+        ]);
+
         return view('coordinador.create_grupo', compact(
-            'actividades', 'instructores', 'semestres', 'ubicaciones',
-            'diasSemana', 'carreras', 'departamentos', 'semestreActual', 'instructoresPorDepto'
+            'actividades', 'instructores', 'ubicaciones',
+            'diasSemana', 'departamentos', 'semestreActual',
+            'semestreActivo', 'instructoresPorDepto', 'carrerasPorActividad'
         ));
     }
 
     public function storeGrupo(Request $request)
     {
+        // Verificar que sigue habiendo semestre activo al momento de guardar
+        $semestreActivo = Semestre::where('status', 'activo')->first();
+        if (!$semestreActivo) {
+            return redirect()->route('coordinador.grupos')
+                ->with('error', 'No hay un periodo escolar activo. No se puede crear el grupo.');
+        }
+
         $request->validate([
             'id_actividad'  => 'required|exists:actividad_complementaria,id_actividad',
-            'id_semestre'   => 'required|exists:semestre,id_semestre',
             'grupo'         => 'required|string|max:10',
             'cupo_maximo'   => 'required|integer|min:1',
             'modalidad'     => 'required|in:presencial,virtual,hibrida',
@@ -115,7 +144,7 @@ class CoordinadorController extends Controller
 
         $grupo = Grupo::create([
             'id_actividad'          => $request->id_actividad,
-            'id_semestre'           => $request->id_semestre,
+            'id_semestre'           => $semestreActivo->id_semestre,
             'id_instructor'         => $request->id_instructor ?: null,
             'id_ubicacion'          => $request->id_ubicacion ?: null,
             'grupo'                 => strtoupper($request->grupo),
