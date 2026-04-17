@@ -143,7 +143,8 @@ class CoordinadorController extends Controller
         $request->validate([
             'id_actividad'  => 'required|exists:actividad_complementaria,id_actividad',
             'grupo'         => 'required|string|max:10',
-            'cupo_maximo'   => 'required|integer|min:1',
+            'cupo_minimo'   => 'required|integer|min:1',
+            'cupo_maximo'   => 'required|integer|min:1|gte:cupo_minimo',
             'modalidad'     => 'required|in:presencial,virtual,hibrida',
             'fecha_inicio'  => 'required|date',
             'fecha_fin'     => 'required|date|after_or_equal:fecha_inicio',
@@ -156,6 +157,7 @@ class CoordinadorController extends Controller
             'id_instructor'         => $request->id_instructor ?: null,
             'id_ubicacion'          => $request->id_ubicacion ?: null,
             'grupo'                 => strtoupper($request->grupo),
+            'cupo_minimo'           => $request->cupo_minimo,
             'cupo_maximo'           => $request->cupo_maximo,
             'cupo_ocupado'          => 0,
             'modalidad'             => $request->modalidad,
@@ -186,7 +188,16 @@ class CoordinadorController extends Controller
         $diasSemana     = DiaSemana::all();
         $carreras       = Carrera::orderBy('nombre')->get();
         $departamentos  = Departamento::orderBy('nombre')->get();
-        $semestreActual = $this->getSemestreActual();
+        
+        // Usar el semestre activo, igual que en createGrupo
+        $semestreActivo = Semestre::where('status', 'activo')->first();
+        $semestreActual = $semestreActivo ? [
+            'id'       => $semestreActivo->id_semestre,
+            'etiqueta' => $semestreActivo->periodo == 1
+                ? "Enero–Junio {$semestreActivo->año}"
+                : "Agosto–Diciembre {$semestreActivo->año}",
+            'clase'    => $semestreActivo->periodo == 1 ? 'semestre-ene-jun' : 'semestre-ago-dic',
+        ] : $this->getSemestreActual(); // fallback por si no hay activo
 
         $instructoresPorDepto = Instructor::with(['usuario', 'departamento'])
             ->get()
@@ -216,7 +227,8 @@ class CoordinadorController extends Controller
             'id_actividad'  => 'required|exists:actividad_complementaria,id_actividad',
             'id_semestre'   => 'required|exists:semestre,id_semestre',
             'grupo'         => 'required|string|max:10',
-            'cupo_maximo'   => 'required|integer|min:1',
+            'cupo_minimo'   => 'required|integer|min:1',
+            'cupo_maximo'   => 'required|integer|min:1|gte:cupo_minimo',
             'modalidad'     => 'required|in:presencial,virtual,hibrida',
             'fecha_inicio'  => 'required|date',
             'fecha_fin'     => 'required|date|after_or_equal:fecha_inicio',
@@ -230,6 +242,7 @@ class CoordinadorController extends Controller
             'id_instructor'         => $request->id_instructor ?: null,
             'id_ubicacion'          => $request->id_ubicacion ?: null,
             'grupo'                 => strtoupper($request->grupo),
+            'cupo_minimo'           => $request->cupo_minimo,
             'cupo_maximo'           => $request->cupo_maximo,
             'modalidad'             => $request->modalidad,
             'materiales_requeridos' => $request->materiales_requeridos,

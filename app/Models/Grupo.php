@@ -10,7 +10,7 @@ class Grupo extends Model
 
     protected $fillable = [
         'id_actividad', 'id_semestre', 'id_instructor',
-        'id_ubicacion', 'grupo', 'cupo_maximo', 'cupo_ocupado',
+        'id_ubicacion', 'grupo', 'cupo_minimo', 'cupo_maximo', 'cupo_ocupado',
         'modalidad', 'materiales_requeridos', 'estatus',
         'fecha_inicio', 'fecha_fin',
     ];

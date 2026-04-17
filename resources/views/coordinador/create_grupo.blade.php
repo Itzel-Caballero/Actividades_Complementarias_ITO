@@ -85,6 +85,12 @@
                             <div class="row">
                                 <div class="col-md-3">
                                     <div class="form-group">
+                                        <label>Cupo Mínimo <span class="text-danger">*</span></label>
+                                        <input type="number" name="cupo_minimo" class="form-control" value="{{ old('cupo_minimo',1) }}" min="1" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
                                         <label>Cupo Máximo <span class="text-danger">*</span></label>
                                         <input type="number" name="cupo_maximo" class="form-control" value="{{ old('cupo_maximo',30) }}" min="1" required>
                                     </div>
@@ -105,6 +111,8 @@
                                         <input type="date" name="fecha_inicio" class="form-control" value="{{ old('fecha_inicio') }}" required>
                                     </div>
                                 </div>
+                            </div>
+                            <div class="row">
                                 <div class="col-md-3">
                                     <div class="form-group">
                                         <label>Fecha de Fin <span class="text-danger">*</span></label>

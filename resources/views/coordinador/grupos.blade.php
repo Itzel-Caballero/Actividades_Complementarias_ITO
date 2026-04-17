@@ -93,8 +93,8 @@
                             @php
                                 $inscritos   = $grupo->inscripciones->count();
                                 $maximo      = $grupo->cupo_maximo;
-                                // Mínimo = 30% del cupo máximo (puedes ajustar)
-                                $minimo      = max(1, (int)round($maximo * 0.3));
+                                // Usar el cupo mínimo de la base de datos, con fallback al 30% del máximo
+                                $minimo      = $grupo->cupo_minimo ?? max(1, (int)round($maximo * 0.3));
                                 $lleno       = $inscritos >= $maximo;
                                 $superaMin   = $inscritos >= $minimo && !$lleno;
                                 $bajMin      = $inscritos < $minimo;

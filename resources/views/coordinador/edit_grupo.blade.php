@@ -71,29 +71,32 @@
                                 </div>
                                 <div class="col-md-3">
                                     <div class="form-group">
-                                        <label>Semestre <span class="text-danger">*</span>
-                                            <span class="semestre-badge {{ $semestreActual['clase'] }}">{{ $semestreActual['etiqueta'] }}</span>
-                                        </label>
-                                        <select name="id_semestre" class="form-control" required>
-                                            @foreach($semestres as $sem)
-                                                @php $etiq = $sem->periodo == 1 ? "Enero–Junio {$sem->año}" : "Agosto–Diciembre {$sem->año}"; @endphp
-                                                <option value="{{ $sem->id_semestre }}"
-                                                    {{ old('id_semestre', $grupo->id_semestre) == $sem->id_semestre ? 'selected' : '' }}>
-                                                    {{ $etiq }}
-                                                </option>
-                                            @endforeach
-                                        </select>
+                                        <label>Periodo Escolar Activo</label>
+                                        {{-- Campo oculto: el semestre viene fijo del servidor --}}
+                                        <div class="form-control d-flex align-items-center" style="background:#f8f9fa; cursor:default;">
+                                            <span class="badge {{ $semestreActual['clase'] }} mr-2" style="font-size:12px;">
+                                                <i class="fas fa-calendar-check mr-1"></i>{{ $semestreActual['etiqueta'] }}
+                                            </span>
+                                        </div>
+                                        <small class="text-muted">Los grupos se asignan al periodo activo automáticamente.</small>
+                                        <input type="hidden" name="id_semestre" value="{{ $grupo->id_semestre }}">
                                     </div>
                                 </div>
                             </div>
                             <div class="row">
                                 <div class="col-md-2">
                                     <div class="form-group">
+                                        <label>Cupo Mínimo <span class="text-danger">*</span></label>
+                                        <input type="number" name="cupo_minimo" class="form-control" value="{{ old('cupo_minimo',$grupo->cupo_minimo ?? 1) }}" min="1" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-group">
                                         <label>Cupo Máximo <span class="text-danger">*</span></label>
                                         <input type="number" name="cupo_maximo" class="form-control" value="{{ old('cupo_maximo',$grupo->cupo_maximo) }}" min="1" required>
                                     </div>
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-2">
                                     <div class="form-group">
                                         <label>Modalidad <span class="text-danger">*</span></label>
                                         <select name="modalidad" class="form-control" required>
@@ -119,7 +122,7 @@
                                         <input type="date" name="fecha_inicio" class="form-control" value="{{ old('fecha_inicio',$grupo->fecha_inicio) }}" required>
                                     </div>
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-2">
                                     <div class="form-group">
                                         <label>Fecha Fin <span class="text-danger">*</span></label>
                                         <input type="date" name="fecha_fin" class="form-control" value="{{ old('fecha_fin',$grupo->fecha_fin) }}" required>
