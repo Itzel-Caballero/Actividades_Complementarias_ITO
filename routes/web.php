@@ -16,6 +16,14 @@ use App\Http\Controllers\Admin\SemestreController;
 use App\Http\Controllers\Admin\DepartamentoController;
 use App\Http\Controllers\Admin\UbicacionController;
 use App\Http\Controllers\Admin\ReporteController;
+use App\Http\Controllers\AlumnoController;
+
+Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
+    // Estas son las que faltaban para los botones nuevos
+    Route::get('alumnos/crear', [AlumnoController::class, 'create'])->name('alumnos.create');
+    Route::post('alumnos/guardar', [AlumnoController::class, 'store'])->name('alumnos.store');
+    Route::delete('alumnos/{id}/baja', [AlumnoController::class, 'destroy'])->name('alumnos.destroy');
+});
 
 
 Route::get('/', function () {

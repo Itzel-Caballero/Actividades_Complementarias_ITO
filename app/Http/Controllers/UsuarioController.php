@@ -155,13 +155,20 @@ class UsuarioController extends Controller
     }
 
     public function destroy($id)
-    {
-        $user = User::findOrFail($id);
-        // Solo se permite eliminar si no tiene inscripciones ni grupos asignados
-        User::findOrFail($id)->delete();
-        return redirect()->route('usuarios.index')
-                         ->with('success', 'Usuario eliminado correctamente.');
+{
+    $usuario = User::find($id);
+
+    // 1. Borramos la relación primero (el registro en la tabla alumnos)
+    if ($usuario->alumno) {
+        $usuario->alumno()->delete();
     }
+
+    // 2. Ahora sí podemos borrar el usuario
+    $usuario->delete();
+
+    return redirect()->route('usuarios.index')
+        ->with('success', 'El alumno ' . $usuario->nombre . ' ha sido dado de baja correctamente.');
+}
 
     /**
      * Habilita o deshabilita un usuario (toggle activo).

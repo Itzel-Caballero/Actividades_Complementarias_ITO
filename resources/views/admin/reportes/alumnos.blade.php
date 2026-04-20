@@ -4,9 +4,13 @@
 
 @section('content')
 <section class="section">
-    <div class="section-header">
+    <div class="section-header d-flex justify-content-between">
         <h3 class="page__heading">Padrón de Alumnos</h3>
+        <a href="{{ route('admin.alumnos.create') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Inscribir Alumno
+        </a>
     </div>
+
     <div class="section-body">
         <div class="row">
             <div class="col-lg-12">
@@ -44,7 +48,6 @@
                             Listado de Alumnos
                             <span class="badge badge-primary ml-2">{{ $alumnos->total() }}</span>
                         </h4>
-                        <small class="text-muted"><i class="fas fa-lock mr-1"></i>Vista de solo lectura</small>
                     </div>
                     <div class="card-body">
                         <div class="table-responsive">
@@ -54,10 +57,11 @@
                                         <th>#</th>
                                         <th>Núm. Control</th>
                                         <th>Nombre Completo</th>
-                                        <th>Email</th>
                                         <th>Carrera</th>
                                         <th class="text-center">Semestre</th>
                                         <th class="text-center">Créditos</th>
+                                        <th class="text-center">Estatus</th>
+                                        <th class="text-center">Acciones</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -66,7 +70,6 @@
                                         <td>{{ ($alumnos->currentPage() - 1) * $alumnos->perPage() + $loop->iteration }}</td>
                                         <td><code>{{ $alumno->usuario->num_control ?? '—' }}</code></td>
                                         <td>{{ $alumno->usuario->nombre_completo ?? '—' }}</td>
-                                        <td>{{ $alumno->usuario->email ?? '—' }}</td>
                                         <td>{{ $alumno->carrera->nombre ?? '—' }}</td>
                                         <td class="text-center">{{ $alumno->semestre_cursando }}</td>
                                         <td class="text-center">
@@ -74,10 +77,37 @@
                                                 {{ $alumno->creditos_acumulados }}
                                             </span>
                                         </td>
+                                        <td class="text-center">
+                                            @if($alumno->inscripciones_count > 0 || (isset($alumno->grupos) && $alumno->grupos->count() > 0))
+                                                <span class="badge badge-success">Activo</span>
+                                            @else
+                                                <span class="badge badge-warning">No Inscrito</span>
+                                            @endif
+                                        </td>
+
+                                        <td class="text-center">
+                                            <div class="btn-group">
+                                                {{-- BOTÓN DE BAJA ACTUALIZADO --}}
+                                                <button type="button" 
+                                                        class="btn btn-sm btn-danger" 
+                                                        onclick="confirmarBaja('{{ $alumno->usuario->nombre_completo ?? 'este alumno' }}', '{{ $alumno->id_alumno }}')"
+                                                        title="Dar de baja al alumno">
+                                                    <i class="fas fa-user-times"></i> Baja
+                                                </button>
+
+                                                <form id="delete-form-{{ $alumno->id_alumno }}" 
+                                                      action="{{ route('admin.alumnos.destroy', $alumno->id_alumno) }}" 
+                                                      method="POST" 
+                                                      style="display:none;">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                </form>
+                                            </div>
+                                        </td>
                                     </tr>
                                     @empty
                                     <tr>
-                                        <td colspan="7" class="text-center text-muted">No se encontraron alumnos.</td>
+                                        <td colspan="8" class="text-center text-muted">No se encontraron alumnos.</td>
                                     </tr>
                                     @endforelse
                                 </tbody>
@@ -93,4 +123,37 @@
         </div>
     </div>
 </section>
+
+@section('scripts')
+<script>
+    // Notificación de éxito con iziToast
+    @if(session('success'))
+        iziToast.success({
+            title: 'Éxito',
+            message: '{{ session("success") }}',
+            position: 'topRight'
+        });
+    @endif
+
+    // Función SweetAlert2 para el Padrón
+    function confirmarBaja(nombre, id) {
+        Swal.fire({
+            title: '¿Confirmar baja del padrón?',
+            text: "Vas a eliminar a " + nombre + ". Esta acción borrará su registro de forma permanente.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#6777ef',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Sí, eliminar registro',
+            cancelButtonText: 'Cancelar',
+            reverseButtons: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                document.getElementById('delete-form-' + id).submit();
+            }
+        });
+    }
+</script>
+@endsection
+
 @endsection

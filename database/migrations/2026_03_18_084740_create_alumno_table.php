@@ -9,19 +9,26 @@ class CreateAlumnoTable extends Migration
 {
     public function up(): void
     {
+        // Eliminamos la tabla si existe para evitar conflictos
         Schema::dropIfExists('alumno');
 
         Schema::create('alumno', function (Blueprint $table) {
-            $table->integer('id_alumno')->primary();
+            // Definimos id_alumno como la llave primaria y foránea al mismo tiempo
+            $table->unsignedBigInteger('id_alumno')->primary();
             $table->unsignedBigInteger('id_carrera');
             $table->integer('semestre_cursando');
             $table->integer('creditos_acumulados')->default(0);
             $table->timestamps();
 
-            $table->foreign('id_carrera')->references('id_carrera')->on('carrera');
+            // Definimos la relación aquí mismo de forma fluida
+            $table->foreign('id_alumno')
+                  ->references('id')
+                  ->on('usuarios') // Asegúrate de que tu tabla de usuarios se llame 'usuarios' o 'USUARIO'
+                  ->onDelete('cascade'); // <--- ESTO ELIMINA AL ALUMNO CUANDO BORRES AL USUARIO
         });
 
-        DB::statement('ALTER TABLE alumno ADD CONSTRAINT alumno_usuario_fk FOREIGN KEY (id_alumno) REFERENCES USUARIO(id)');
+        // Nota: He comentado el DB::statement porque la línea de arriba ya hace el trabajo
+        // DB::statement('ALTER TABLE alumno ADD CONSTRAINT alumno_usuario_fk FOREIGN KEY (id_alumno) REFERENCES USUARIO(id)');
     }
 
     public function down()
