@@ -51,8 +51,7 @@ class UsuarioController extends Controller
             'apellido_paterno' => 'required',
             'email'            => 'required|email|unique:USUARIO,email',
             'password'         => 'required|same:confirm-password',
-            'roles'            => 'required',
-            'tipo_usuario'     => 'required',
+            'tipo_usuario'     => 'required|in:alumno,instructor,coordinador',
         ];
 
         // num_control solo obligatorio para alumnos
@@ -99,10 +98,21 @@ class UsuarioController extends Controller
         }
 
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
-        try {
-            $user->assignRole($request->input('roles'));
-        } catch (\Exception $e) {
-            \Log::error('assignRole error: ' . $e->getMessage());
+        
+        // Determinar rol automáticamente basado en tipo_usuario
+        $rol = match($request->tipo_usuario) {
+            'alumno' => 'alumno',
+            'instructor' => 'instructor',
+            'coordinador' => 'coordinador',
+            default => null
+        };
+        
+        if ($rol) {
+            try {
+                $user->assignRole($rol);
+            } catch (\Exception $e) {
+                \Log::error('assignRole error: ' . $e->getMessage());
+            }
         }
 
         return redirect()->route('usuarios.index')->with('success', 'Usuario creado correctamente.');
@@ -127,7 +137,7 @@ class UsuarioController extends Controller
             'apellido_paterno' => 'required',
             'email'            => 'required|email|unique:USUARIO,email,' . $id,
             'password'         => 'nullable|same:confirm-password',
-            'roles'            => 'required',
+            'tipo_usuario'     => 'required|in:alumno,instructor,coordinador',
         ]);
 
         $user = User::findOrFail($id);
@@ -147,8 +157,19 @@ class UsuarioController extends Controller
         }
 
         $user->update($data);
-        DB::table('model_has_roles')->where('model_id', $id)->delete();
-        $user->fresh()->assignRole($request->input('roles'));
+        
+        // Determinar rol automáticamente basado en tipo_usuario
+        $rol = match($request->tipo_usuario) {
+            'alumno' => 'alumno',
+            'instructor' => 'instructor',
+            'coordinador' => 'coordinador',
+            default => null
+        };
+        
+        if ($rol) {
+            DB::table('model_has_roles')->where('model_id', $id)->delete();
+            $user->fresh()->assignRole($rol);
+        }
 
         return redirect()->route('usuarios.index')
                          ->with('success', 'Usuario actualizado correctamente.');

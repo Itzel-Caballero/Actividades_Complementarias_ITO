@@ -59,13 +59,16 @@
                             </div>
 
 <div class="form-group">
-    <label>Tipo de usuario</label>
+    <label>Tipo de usuario <span class="text-danger">*</span></label>
     <select name="tipo_usuario" id="tipo_usuario" class="form-control" required>
         <option value="">-- Selecciona --</option>
-        <option value="alumno"     {{ old('tipo_usuario') == 'alumno'     ? 'selected' : '' }}>Alumno</option>
-        <option value="instructor" {{ old('tipo_usuario') == 'instructor' ? 'selected' : '' }}>Instructor</option>
-        <option value="admin"      {{ old('tipo_usuario') == 'admin'      ? 'selected' : '' }}>Admin</option>
+        <option value="alumno"      {{ old('tipo_usuario') == 'alumno'      ? 'selected' : '' }}>Alumno</option>
+        <option value="instructor"  {{ old('tipo_usuario') == 'instructor'  ? 'selected' : '' }}>Instructor</option>
+        <option value="coordinador" {{ old('tipo_usuario') == 'coordinador' ? 'selected' : '' }}>Coordinador</option>
     </select>
+    <small class="form-text text-muted">
+        El rol se asignará automáticamente según el tipo seleccionado.
+    </small>
 </div>
 
 {{-- Campos extra para INSTRUCTOR --}}
@@ -109,14 +112,15 @@
                             </div>
 
                             <div class="form-group">
-                                <label>Rol</label>
-                                <select name="roles" class="form-control" required>
-                                    <option value="">-- Selecciona un rol --</option>
-                                    @foreach ($roles as $rol)
-                                        <option value="{{ $rol }}" {{ old('roles') == $rol ? 'selected' : '' }}>{{ $rol }}</option>
-                                    @endforeach
-                                </select>
+                                <label>Rol asignado</label>
+                                <input type="text" class="form-control" id="rol_asignado" readonly value="Seleccione un tipo de usuario">
+                                <small class="form-text text-muted">
+                                    Este campo es automático y se sincroniza con el tipo de usuario.
+                                </small>
                             </div>
+                            
+                            {{-- Campo oculto para enviar el rol automáticamente --}}
+                            <input type="hidden" name="roles" id="roles_hidden" value="">
 
                             <div class="d-flex justify-content-between">
                                 <a href="{{ route('usuarios.index') }}" class="btn btn-secondary">
@@ -136,14 +140,50 @@
 
 @section('scripts')
 <script>
-    function toggleCamposExtra() {
-        var tipo = document.getElementById('tipo_usuario').value;
+    // Función para sincronizar tipo de usuario con rol
+    function sincronizarRol() {
+        const tipo = document.getElementById('tipo_usuario').value;
+        let rol = '';
+        let rolTexto = 'Seleccione un tipo de usuario';
+        
+        // Mapear tipo de usuario a rol
+        switch(tipo) {
+            case 'alumno':
+                rol = 'alumno';
+                rolTexto = 'Alumno';
+                break;
+            case 'instructor':
+                rol = 'instructor';
+                rolTexto = 'Instructor';
+                break;
+            case 'coordinador':
+                rol = 'coordinador';
+                rolTexto = 'Coordinador';
+                break;
+            default:
+                rol = '';
+                rolTexto = 'Seleccione un tipo de usuario';
+        }
+        
+        // Actualizar campo oculto y campo de visualización
+        document.getElementById('roles_hidden').value = rol;
+        document.getElementById('rol_asignado').value = rolTexto;
+        
+        // Mostrar/ocultar campos de instructor
         document.getElementById('campos_instructor').style.display =
             tipo === 'instructor' ? 'block' : 'none';
     }
-    document.getElementById('tipo_usuario').addEventListener('change', toggleCamposExtra);
-    // Mostrar al cargar si hay old() con valor
-    toggleCamposExtra();
+    
+    // Configurar event listeners
+    document.addEventListener('DOMContentLoaded', function() {
+        const tipoSelect = document.getElementById('tipo_usuario');
+        
+        // Sincronizar al cambiar el tipo
+        tipoSelect.addEventListener('change', sincronizarRol);
+        
+        // Ejecutar al cargar para establecer el estado inicial
+        sincronizarRol();
+    });
 </script>
 @endsection
 @endsection
