@@ -1,6 +1,4 @@
-{{-- ═══════════════════════════════════════════════════════════════ --}}
-{{-- Dashboard (todos los roles)                                    --}}
-{{-- ═══════════════════════════════════════════════════════════════ --}}
+{{-- Dashboard --}}
 <li class="{{ Request::is('home') ? 'active' : '' }}">
     <a class="nav-link" href="/home">
         <i class="fas fa-home"></i><span>Dashboard</span>
@@ -8,11 +6,12 @@
 </li>
 
 {{-- ═══════════════════════════════════════════════════════════════ --}}
-{{-- Menú para ADMIN                                                --}}
+{{-- Menú para ADMIN --}}
 {{-- ═══════════════════════════════════════════════════════════════ --}}
 @role('admin')
 
-<li class="{{ Request::is('usuarios*') || Request::is('roles*') || Request::is('admin/reportes/accesos*') ? 'active' : '' }}">
+<li
+    class="{{ Request::is('usuarios*') || Request::is('roles*') || Request::is('admin/reportes/accesos*') || Request::is('admin/coordinadores*') ? 'active' : '' }}">
     <a class="nav-link has-dropdown" href="#">
         <i class="fas fa-user-shield"></i><span>Identidades y Acceso</span>
     </a>
@@ -27,6 +26,11 @@
                 <i class="fas fa-user-lock"></i><span>Roles y Permisos</span>
             </a>
         </li>
+        <li class="{{ Request::is('admin/coordinadores*') ? 'active' : '' }}">
+            <a class="nav-link" href="{{ route('admin.coordinadores.index') }}">
+                <i class="fas fa-user-tie"></i><span>Panel de Coordinadores</span>
+            </a>
+        </li>
         <li class="{{ Request::is('admin/reportes/accesos*') ? 'active' : '' }}">
             <a class="nav-link" href="{{ route('admin.reportes.accesos') }}">
                 <i class="fas fa-history"></i><span>Log de Accesos</span>
@@ -35,7 +39,8 @@
     </ul>
 </li>
 
-<li class="{{ Request::is('admin/carreras*') || Request::is('admin/semestres*') || Request::is('admin/departamentos*') ? 'active' : '' }}">
+<li
+    class="{{ Request::is('admin/carreras*') || Request::is('admin/semestres*') || Request::is('admin/departamentos*') ? 'active' : '' }}">
     <a class="nav-link has-dropdown" href="#">
         <i class="fas fa-university"></i><span>Estructura Académica</span>
     </a>
@@ -92,7 +97,7 @@
 @endrole
 
 {{-- ═══════════════════════════════════════════════════════════════ --}}
-{{-- Menú para ALUMNO                                               --}}
+{{-- Menú para ALUMNO --}}
 {{-- ═══════════════════════════════════════════════════════════════ --}}
 @role('alumno')
 <li class="{{ Request::is('actividades*') ? 'active' : '' }}">
@@ -108,7 +113,7 @@
 @endrole
 
 {{-- ═══════════════════════════════════════════════════════════════ --}}
-{{-- Menú para INSTRUCTOR                                           --}}
+{{-- Menú para INSTRUCTOR --}}
 {{-- ═══════════════════════════════════════════════════════════════ --}}
 @role('instructor')
 <li class="{{ Request::is('instructor/mis-grupos*') ? 'active' : '' }}">
@@ -116,15 +121,10 @@
         <i class="fas fa-chalkboard-teacher"></i><span>Mis Grupos</span>
     </a>
 </li>
-<li class="{{ Request::is('instructor/perfil*') ? 'active' : '' }}">
-    <a class="nav-link" href="{{ route('instructor.perfil') }}">
-        <i class="fas fa-user-edit"></i><span>Mi Perfil</span>
-    </a>
-</li>
 @endrole
 
 {{-- ═══════════════════════════════════════════════════════════════ --}}
-{{-- Menú para COORDINADOR                                          --}}
+{{-- Menú para COORDINADOR --}}
 {{-- ═══════════════════════════════════════════════════════════════ --}}
 @role('coordinador')
 <li class="{{ Request::is('coordinador') ? 'active' : '' }}">
