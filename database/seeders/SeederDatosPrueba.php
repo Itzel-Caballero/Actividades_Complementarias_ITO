@@ -153,37 +153,40 @@ class SeederDatosPrueba extends Seeder
         }
 
         // ── Grupos de ejemplo ──────────────────────────────────────────
-        DB::table('grupo')->insert([
-            [
-                'id_actividad'          => 1, 'id_semestre' => 1, 'id_instructor' => null, 'id_ubicacion' => 4,
-                'grupo' => 'A', 'cupo_maximo' => 20, 'cupo_ocupado' => 5, 'modalidad' => 'presencial',
-                'materiales_requeridos' => 'Laptop', 'estatus' => 'abierta',
-                'fecha_inicio' => '2026-02-01', 'fecha_fin' => '2026-05-31',
-                'created_at' => now(), 'updated_at' => now(),
-            ],
-            [
-                'id_actividad'          => 2, 'id_semestre' => 1, 'id_instructor' => null, 'id_ubicacion' => 1,
-                'grupo' => 'A', 'cupo_maximo' => 25, 'cupo_ocupado' => 8, 'modalidad' => 'presencial',
-                'materiales_requeridos' => 'Ninguno', 'estatus' => 'abierta',
-                'fecha_inicio' => '2026-02-01', 'fecha_fin' => '2026-05-31',
-                'created_at' => now(), 'updated_at' => now(),
-            ],
-            [
-                'id_actividad'          => 3, 'id_semestre' => 1, 'id_instructor' => null, 'id_ubicacion' => 3,
-                'grupo' => 'A', 'cupo_maximo' => 30, 'cupo_ocupado' => 15, 'modalidad' => 'presencial',
-                'materiales_requeridos' => 'Ropa deportiva', 'estatus' => 'abierta',
-                'fecha_inicio' => '2026-02-01', 'fecha_fin' => '2026-05-31',
-                'created_at' => now(), 'updated_at' => now(),
-            ],
+        $idSemestre1  = DB::table('semestre')->where('periodo', 1)->value('id_semestre');
+        $idProgramacion = DB::table('actividad_complementaria')->where('nombre', 'Programación Web con Laravel')->value('id_actividad');
+        $idIngles       = DB::table('actividad_complementaria')->where('nombre', 'Inglés Técnico')->value('id_actividad');
+        $idFutbol       = DB::table('actividad_complementaria')->where('nombre', 'Fútbol Soccer')->value('id_actividad');
+
+        $idGrupo1 = DB::table('grupo')->insertGetId([
+            'id_actividad'          => $idProgramacion, 'id_semestre' => $idSemestre1, 'id_instructor' => null, 'id_ubicacion' => 4,
+            'grupo' => 'A', 'cupo_maximo' => 20, 'cupo_ocupado' => 5, 'modalidad' => 'presencial',
+            'materiales_requeridos' => 'Laptop', 'estatus' => 'abierta',
+            'fecha_inicio' => '2026-02-01', 'fecha_fin' => '2026-05-31',
+            'created_at' => now(), 'updated_at' => now(),
+        ]);
+        $idGrupo2 = DB::table('grupo')->insertGetId([
+            'id_actividad'          => $idIngles, 'id_semestre' => $idSemestre1, 'id_instructor' => null, 'id_ubicacion' => 1,
+            'grupo' => 'A', 'cupo_maximo' => 25, 'cupo_ocupado' => 8, 'modalidad' => 'presencial',
+            'materiales_requeridos' => 'Ninguno', 'estatus' => 'abierta',
+            'fecha_inicio' => '2026-02-01', 'fecha_fin' => '2026-05-31',
+            'created_at' => now(), 'updated_at' => now(),
+        ]);
+        $idGrupo3 = DB::table('grupo')->insertGetId([
+            'id_actividad'          => $idFutbol, 'id_semestre' => $idSemestre1, 'id_instructor' => null, 'id_ubicacion' => 3,
+            'grupo' => 'A', 'cupo_maximo' => 30, 'cupo_ocupado' => 15, 'modalidad' => 'presencial',
+            'materiales_requeridos' => 'Ropa deportiva', 'estatus' => 'abierta',
+            'fecha_inicio' => '2026-02-01', 'fecha_fin' => '2026-05-31',
+            'created_at' => now(), 'updated_at' => now(),
         ]);
 
         // ── Horarios de los grupos ─────────────────────────────────────
         DB::table('horario')->insert([
-            ['id_grupo' => 1, 'id_dia' => 1, 'hora_inicio' => '10:00:00', 'hora_fin' => '12:00:00', 'created_at' => now(), 'updated_at' => now()],
-            ['id_grupo' => 1, 'id_dia' => 3, 'hora_inicio' => '10:00:00', 'hora_fin' => '12:00:00', 'created_at' => now(), 'updated_at' => now()],
-            ['id_grupo' => 2, 'id_dia' => 2, 'hora_inicio' => '08:00:00', 'hora_fin' => '10:00:00', 'created_at' => now(), 'updated_at' => now()],
-            ['id_grupo' => 2, 'id_dia' => 4, 'hora_inicio' => '08:00:00', 'hora_fin' => '10:00:00', 'created_at' => now(), 'updated_at' => now()],
-            ['id_grupo' => 3, 'id_dia' => 5, 'hora_inicio' => '14:00:00', 'hora_fin' => '16:00:00', 'created_at' => now(), 'updated_at' => now()],
+            ['id_grupo' => $idGrupo1, 'id_dia' => 1, 'hora_inicio' => '10:00:00', 'hora_fin' => '12:00:00', 'created_at' => now(), 'updated_at' => now()],
+            ['id_grupo' => $idGrupo1, 'id_dia' => 3, 'hora_inicio' => '10:00:00', 'hora_fin' => '12:00:00', 'created_at' => now(), 'updated_at' => now()],
+            ['id_grupo' => $idGrupo2, 'id_dia' => 2, 'hora_inicio' => '08:00:00', 'hora_fin' => '10:00:00', 'created_at' => now(), 'updated_at' => now()],
+            ['id_grupo' => $idGrupo2, 'id_dia' => 4, 'hora_inicio' => '08:00:00', 'hora_fin' => '10:00:00', 'created_at' => now(), 'updated_at' => now()],
+            ['id_grupo' => $idGrupo3, 'id_dia' => 5, 'hora_inicio' => '14:00:00', 'hora_fin' => '16:00:00', 'created_at' => now(), 'updated_at' => now()],
         ]);
 
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
