@@ -60,7 +60,7 @@
                             </div>
 
                             <div class="row">
-                                <div class="col-md-6">
+                                <div class="col-md-6" id="campo_num_control" style="{{ old('tipo_usuario', $user->tipo_usuario) == 'alumno' ? '' : 'display:none' }}">
                                     <div class="form-group">
                                         <label>Número de Control</label>
                                         <input type="text" name="num_control" class="form-control"
@@ -123,7 +123,6 @@
                                             <option value="alumno"      {{ old('tipo_usuario', $user->tipo_usuario) == 'alumno'      ? 'selected' : '' }}>Alumno</option>
                                             <option value="instructor"  {{ old('tipo_usuario', $user->tipo_usuario) == 'instructor'  ? 'selected' : '' }}>Instructor</option>
                                             <option value="coordinador" {{ old('tipo_usuario', $user->tipo_usuario) == 'coordinador' ? 'selected' : '' }}>Coordinador</option>
-                                            <option value="admin"       {{ old('tipo_usuario', $user->tipo_usuario) == 'admin'       ? 'selected' : '' }}>Admin</option>
                                         </select>
                                     </div>
                                 </div>
@@ -199,8 +198,22 @@
 @section('scripts')
 <script>
     document.getElementById('tipo_usuario').addEventListener('change', function () {
+        const tipo = this.value;
+        
+        // Mostrar/ocultar campos de instructor
         document.getElementById('campos_instructor').style.display =
-            this.value === 'instructor' ? 'block' : 'none';
+            tipo === 'instructor' ? 'block' : 'none';
+        
+        // Mostrar/ocultar campo de número de control (solo para alumnos)
+        document.getElementById('campo_num_control').style.display =
+            tipo === 'alumno' ? '' : 'none';
+    });
+    
+    // Ejecutar al cargar para establecer el estado inicial
+    document.addEventListener('DOMContentLoaded', function() {
+        const tipo = document.getElementById('tipo_usuario').value;
+        document.getElementById('campo_num_control').style.display =
+            tipo === 'alumno' ? '' : 'none';
     });
 </script>
 @endsection
