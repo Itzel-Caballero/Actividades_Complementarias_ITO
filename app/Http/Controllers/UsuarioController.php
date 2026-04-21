@@ -132,13 +132,20 @@ class UsuarioController extends Controller
 
     public function update(Request $request, $id)
     {
-        $this->validate($request, [
+        $rules = [
             'nombre'           => 'required',
             'apellido_paterno' => 'required',
             'email'            => 'required|email|unique:USUARIO,email,' . $id,
             'password'         => 'nullable|same:confirm-password',
             'tipo_usuario'     => 'required|in:alumno,instructor,coordinador',
-        ]);
+        ];
+
+        // Validar departamento si es instructor
+        if ($request->tipo_usuario === 'instructor') {
+            $rules['id_departamento'] = 'required|exists:departamento,id_departamento';
+        }
+
+        $this->validate($request, $rules);
 
         $user = User::findOrFail($id);
 
@@ -157,15 +164,26 @@ class UsuarioController extends Controller
         }
 
         $user->update($data);
-        
+
+        // Actualizar o crear registro en tabla instructor si corresponde
+        if ($request->tipo_usuario === 'instructor') {
+            Instructor::updateOrCreate(
+                ['id_instructor' => $id],
+                [
+                    'id_departamento' => $request->id_departamento,
+                    'especialidad'    => $request->especialidad,
+                ]
+            );
+        }
+
         // Determinar rol automáticamente basado en tipo_usuario
         $rol = match($request->tipo_usuario) {
-            'alumno' => 'alumno',
-            'instructor' => 'instructor',
+            'alumno'      => 'alumno',
+            'instructor'  => 'instructor',
             'coordinador' => 'coordinador',
-            default => null
+            default       => null
         };
-        
+
         if ($rol) {
             DB::table('model_has_roles')->where('model_id', $id)->delete();
             $user->fresh()->assignRole($rol);
