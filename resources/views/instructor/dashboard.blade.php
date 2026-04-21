@@ -9,20 +9,33 @@
 
     <div class="section-body">
 
-        {{-- ── PERFIL DEL INSTRUCTOR ───────────────────────────────────────── --}}
+        {{-- ── ALERTA PERIODO ──────────────────────────────────────────────── --}}
+        @if (!$semestreActivo)
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle mr-2"></i>
+                <strong>Sin periodo activo.</strong>
+                Actualmente no hay un semestre activo en el sistema. Podrás ver tu información pero no podrás calificar alumnos.
+            </div>
+        @else
+            <div class="alert alert-success py-2">
+                <i class="fas fa-calendar-check mr-2"></i>
+                Periodo activo: <strong>{{ $semestreActivo->label }}</strong>
+                &nbsp;·&nbsp;
+                {{ \Carbon\Carbon::parse($semestreActivo->fecha_inicio)->format('d/m/Y') }} –
+                {{ \Carbon\Carbon::parse($semestreActivo->fecha_fin)->format('d/m/Y') }}
+            </div>
+        @endif
+
+        {{-- ── PERFIL ───────────────────────────────────────────────────────── --}}
         <div class="row">
             <div class="col-12">
                 <div class="card">
                     <div class="card-body">
                         <div class="d-flex align-items-center">
-
-                            {{-- Avatar con iniciales --}}
                             <div class="rounded-circle d-flex align-items-center justify-content-center mr-4 flex-shrink-0"
-                                 style="width:72px; height:72px; background:#6777ef; font-size:1.8rem; font-weight:700; color:#fff;">
+                                 style="width:72px;height:72px;background:#6777ef;font-size:1.8rem;font-weight:700;color:#fff;">
                                 {{ strtoupper(substr(auth()->user()->nombre ?? 'I', 0, 1)) }}{{ strtoupper(substr(auth()->user()->apellido_paterno ?? '', 0, 1)) }}
                             </div>
-
-                            {{-- Datos personales --}}
                             <div class="flex-grow-1">
                                 <h5 class="mb-1 font-weight-bold">
                                     {{ auth()->user()->nombre }}
@@ -41,8 +54,6 @@
                                         : 'N/A' }}
                                 </p>
                             </div>
-
-                            {{-- Departamento y especialidad --}}
                             <div class="text-right ml-4 flex-shrink-0">
                                 <p class="mb-1">
                                     <span class="badge badge-primary">
@@ -50,19 +61,21 @@
                                         {{ $instructor->departamento->nombre ?? 'Sin departamento' }}
                                     </span>
                                 </p>
-                                <p class="mb-0 text-muted small">
+                                <p class="mb-2 text-muted small">
                                     <i class="fas fa-star text-warning mr-1"></i>
                                     {{ $instructor->especialidad ?? 'Sin especialidad' }}
                                 </p>
+                                <a href="{{ route('instructor.perfil') }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-user-edit mr-1"></i> Editar perfil
+                                </a>
                             </div>
-
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        {{-- ── TARJETAS DE MÉTRICAS (mismo estilo que admin/alumno) ─────────── --}}
+        {{-- ── MÉTRICAS ─────────────────────────────────────────────────────── --}}
         <p class="text-muted mb-1">
             <small><i class="fas fa-chart-bar mr-1"></i> Resumen del semestre</small>
         </p>
@@ -81,7 +94,6 @@
                     </div>
                 </div>
             </div>
-
             <div class="col-md-3 col-sm-6">
                 <div class="card bg-c-green order-card">
                     <div class="card-block">
@@ -96,7 +108,6 @@
                     </div>
                 </div>
             </div>
-
             <div class="col-md-3 col-sm-6">
                 <div class="card bg-c-pink order-card">
                     <div class="card-block">
@@ -111,7 +122,6 @@
                     </div>
                 </div>
             </div>
-
             <div class="col-md-3 col-sm-6">
                 <div class="card {{ $totalPendientes > 0 ? 'bg-c-pink' : 'bg-c-green' }} order-card">
                     <div class="card-block">
@@ -130,88 +140,70 @@
             </div>
         </div>
 
-        {{-- ── TABLA RESUMEN DE GRUPOS ─────────────────────────────────────── --}}
-        @if ($instructor && $instructor->grupos->count() > 0)
+        {{-- ── TABLA: ALUMNOS PENDIENTES DE CALIFICAR ───────────────────────── --}}
         <p class="text-muted mb-1 mt-2">
-            <small><i class="fas fa-chalkboard mr-1"></i> Mis grupos</small>
+            <small><i class="fas fa-exclamation-circle mr-1 text-warning"></i> Alumnos pendientes de calificar</small>
         </p>
         <div class="row">
             <div class="col-12">
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
-                        <h6 class="mb-0">Grupos asignados</h6>
+                        <h6 class="mb-0">Pendientes de calificación</h6>
                         <a href="{{ route('instructor.mis-grupos') }}" class="btn btn-sm btn-primary">
-                            <i class="fas fa-eye mr-1"></i> Ver con alumnos
+                            <i class="fas fa-list mr-1"></i> Ver lista completa
                         </a>
                     </div>
                     <div class="card-body p-0">
+                        @if ($alumnosPendientes->isEmpty())
+                            <div class="text-center text-success py-4">
+                                <i class="fas fa-check-circle fa-2x mb-2"></i>
+                                <p class="mb-0">¡Todos los alumnos han sido calificados!</p>
+                            </div>
+                        @else
                         <div class="table-responsive">
                             <table class="table table-hover mb-0">
                                 <thead class="thead-light">
                                     <tr>
+                                        <th>#</th>
+                                        <th>Alumno</th>
+                                        <th>No. Control</th>
                                         <th>Actividad</th>
                                         <th>Grupo</th>
-                                        <th>Semestre</th>
-                                        <th>Modalidad</th>
-                                        <th>Alumnos</th>
-                                        <th>Calificados</th>
-                                        <th>Estatus</th>
+                                        <th class="text-center">Acción</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach ($instructor->grupos as $grupo)
-                                    @php
-                                        $calificadosGrupo = $grupo->inscripciones->filter(
-                                            fn($i) => $i->calificaciones->count() > 0
-                                        )->count();
-                                        $pct = $grupo->cupo_maximo > 0
-                                            ? round(($grupo->cupo_ocupado / $grupo->cupo_maximo) * 100)
-                                            : 0;
-                                    @endphp
+                                    @foreach ($alumnosPendientes as $i => $pendiente)
                                     <tr>
-                                        <td><strong>{{ $grupo->actividad->nombre ?? 'N/A' }}</strong></td>
-                                        <td><span class="badge badge-secondary">{{ $grupo->grupo }}</span></td>
-                                        <td>{{ $grupo->semestre->año ?? '—' }}-{{ $grupo->semestre->periodo ?? '—' }}</td>
-                                        <td>{{ ucfirst($grupo->modalidad) }}</td>
+                                        <td class="text-muted">{{ $i + 1 }}</td>
+                                        <td><strong>{{ $pendiente['nombre'] }}</strong></td>
                                         <td>
-                                            <div class="d-flex align-items-center">
-                                                <span class="mr-2">{{ $grupo->cupo_ocupado }}/{{ $grupo->cupo_maximo }}</span>
-                                                <div class="progress flex-grow-1" style="height:6px; min-width:50px;">
-                                                    <div class="progress-bar bg-{{ $pct >= 90 ? 'danger' : ($pct >= 60 ? 'warning' : 'success') }}"
-                                                         style="width:{{ $pct }}%"></div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            @if ($grupo->inscripciones->count() > 0)
-                                                <span class="{{ $calificadosGrupo < $grupo->inscripciones->count() ? 'text-warning' : 'text-success' }}">
-                                                    <i class="fas fa-{{ $calificadosGrupo < $grupo->inscripciones->count() ? 'exclamation-circle' : 'check-circle' }} mr-1"></i>
-                                                    {{ $calificadosGrupo }}/{{ $grupo->inscripciones->count() }}
-                                                </span>
-                                            @else
-                                                <span class="text-muted">—</span>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            <span class="badge badge-{{ $grupo->estatus === 'abierta' ? 'success' : ($grupo->estatus === 'cancelada' ? 'danger' : 'warning') }}">
-                                                {{ ucfirst($grupo->estatus) }}
+                                            <span class="badge badge-light border">
+                                                {{ $pendiente['num_control'] ?? 'N/A' }}
                                             </span>
+                                        </td>
+                                        <td>{{ $pendiente['actividad'] }}</td>
+                                        <td><span class="badge badge-secondary">{{ $pendiente['grupo'] }}</span></td>
+                                        <td class="text-center">
+                                            @if ($semestreActivo)
+                                                <a href="{{ route('instructor.calificar', $pendiente['id_inscripcion']) }}"
+                                                   class="btn btn-sm btn-primary">
+                                                    <i class="fas fa-star mr-1"></i> Calificar
+                                                </a>
+                                            @else
+                                                <span class="btn btn-sm btn-secondary disabled">Sin periodo activo</span>
+                                            @endif
                                         </td>
                                     </tr>
                                     @endforeach
                                 </tbody>
                             </table>
                         </div>
+                        @endif
                     </div>
                 </div>
             </div>
         </div>
-        @else
-        <div class="alert alert-info mt-3">
-            <i class="fas fa-info-circle mr-2"></i>
-            Aún no tienes grupos asignados. Contacta al coordinador.
-        </div>
-        @endif
 
     </div>
 </section>

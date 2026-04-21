@@ -20,12 +20,10 @@ use App\Http\Controllers\PanelCoordinadoresController;
 use App\Http\Controllers\AlumnoController;
 
 Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
-    // Estas son las que faltaban para los botones nuevos
     Route::get('alumnos/crear', [AlumnoController::class, 'create'])->name('alumnos.create');
     Route::post('alumnos/guardar', [AlumnoController::class, 'store'])->name('alumnos.store');
     Route::delete('alumnos/{id}/baja', [AlumnoController::class, 'destroy'])->name('alumnos.destroy');
 });
-
 
 Route::get('/', function () {
     return view('welcome');
@@ -54,12 +52,11 @@ Route::middleware(['auth', 'usuario.activo'])->group(function () {
 
     // ─── Instructor ───────────────────────────────────────────────────────
     Route::prefix('instructor')->name('instructor.')->group(function () {
-        Route::get('/mis-grupos', [InstructorController::class, 'misGrupos'])
-             ->name('mis-grupos');
-        Route::get('/calificar/{id_inscripcion}', [InstructorController::class, 'calificar'])
-             ->name('calificar');
-        Route::put('/calificar/{id_inscripcion}', [InstructorController::class, 'guardarCalificacion'])
-             ->name('guardarCalificacion');
+        Route::get('/mis-grupos',   [InstructorController::class, 'misGrupos'])->name('mis-grupos');
+        Route::get('/perfil',       [InstructorController::class, 'editarPerfil'])->name('perfil');
+        Route::put('/perfil',       [InstructorController::class, 'actualizarPerfil'])->name('perfil.update');
+        Route::get('/calificar/{id_inscripcion}',  [InstructorController::class, 'calificar'])->name('calificar');
+        Route::put('/calificar/{id_inscripcion}',  [InstructorController::class, 'guardarCalificacion'])->name('guardarCalificacion');
     });
 
     // ─── Recursos generales ───────────────────────────────────────────────
@@ -79,9 +76,7 @@ Route::middleware(['auth', 'usuario.activo'])->group(function () {
 
     // ─── Coordinador ──────────────────────────────────────────────────────
     Route::prefix('coordinador')->name('coordinador.')->group(function () {
-
         Route::get('/',  [CoordinadorController::class, 'index'])->name('index');
-
         Route::get('/grupos',             [CoordinadorController::class, 'grupos'])->name('grupos');
         Route::get('/grupos/crear',       [CoordinadorController::class, 'createGrupo'])->name('grupos.create');
         Route::post('/grupos',            [CoordinadorController::class, 'storeGrupo'])->name('grupos.store');
@@ -89,12 +84,10 @@ Route::middleware(['auth', 'usuario.activo'])->group(function () {
         Route::put('/grupos/{id}',        [CoordinadorController::class, 'updateGrupo'])->name('grupos.update');
         Route::delete('/grupos/{id}',     [CoordinadorController::class, 'destroyGrupo'])->name('grupos.destroy');
         Route::post('/grupos/{id}/instructor', [CoordinadorController::class, 'asignarInstructor'])->name('grupos.asignar_instructor');
-
         Route::get('/actividades', [CoordinadorController::class, 'actividades'])->name('actividades');
         Route::get('/docentes',    [CoordinadorController::class, 'docentes'])->name('docentes');
         Route::get('/alumnos',     [CoordinadorController::class, 'alumnos'])->name('alumnos');
         Route::post('/alumnos/{inscripcion}/baja', [CoordinadorController::class, 'darBajaAlumno'])->name('alumnos.baja');
-
         Route::get('/api/instructores',           [CoordinadorController::class, 'buscarInstructores'])->name('api.instructores');
         Route::get('/api/instructores-actividad', [CoordinadorController::class, 'instructoresPorActividad'])->name('api.instructores_actividad');
     });
@@ -109,8 +102,6 @@ Route::middleware(['auth', 'usuario.activo'])->group(function () {
         Route::get('/reportes/inscripciones', [ReporteController::class, 'inscripciones'])->name('reportes.inscripciones');
         Route::get('/reportes/accesos',       [ReporteController::class, 'accesos'])->name('reportes.accesos');
         Route::post('/admin/semestres', [SemestreController::class, 'store'])->name('admin.semestres.store');
-
-        // ─── Panel de Coordinadores ───────────────────────────────────────
         Route::get('/coordinadores',              [PanelCoordinadoresController::class, 'index'])->name('coordinadores.index');
         Route::post('/coordinadores/asignar',     [PanelCoordinadoresController::class, 'asignar'])->name('coordinadores.asignar');
         Route::delete('/coordinadores/{id}/quitar', [PanelCoordinadoresController::class, 'quitar'])->name('coordinadores.quitar');

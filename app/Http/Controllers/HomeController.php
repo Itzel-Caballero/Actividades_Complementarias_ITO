@@ -5,6 +5,7 @@ use Illuminate\Http\Request;
 use App\Models\Alumno;
 use App\Models\Inscripcion;
 use App\Models\Instructor;
+use App\Models\Semestre;
 
 class HomeController extends Controller
 {
@@ -17,7 +18,7 @@ class HomeController extends Controller
     {
         $user = auth()->user();
 
-        // ── Dashboard para ALUMNO ─────────────────────────────────────────
+        // ── ALUMNO ────────────────────────────────────────────────────────
         if ($user->hasRole('alumno')) {
             $alumno = Alumno::with('carrera')
                 ->where('id_alumno', $user->id)
@@ -37,24 +38,30 @@ class HomeController extends Controller
             return view('alumno.dashboard', compact('alumno', 'inscripcionActiva'));
         }
 
-        // ── Dashboard para INSTRUCTOR ─────────────────────────────────────
+        // ── INSTRUCTOR ────────────────────────────────────────────────────
         if ($user->hasRole('instructor')) {
+            $semestreActivo = Semestre::where('status', 'activo')->first();
+
             $instructor = Instructor::where('id_instructor', $user->id)
                 ->with([
                     'departamento',
                     'grupos.actividad',
                     'grupos.semestre',
                     'grupos.inscripciones.calificaciones',
+                    'grupos.inscripciones.alumno.usuario',
+                    'grupos.inscripciones.alumno.carrera',
                 ])
                 ->first();
 
-            // Métricas calculadas
-            $totalGrupos     = $instructor ? $instructor->grupos->count() : 0;
-            $gruposActivos   = $instructor ? $instructor->grupos->where('estatus', 'abierta')->count() : 0;
-            $totalAlumnos    = $instructor ? $instructor->grupos->sum('cupo_ocupado') : 0;
-
+            $totalGrupos      = $instructor ? $instructor->grupos->count() : 0;
+            $gruposActivos    = $instructor ? $instructor->grupos->where('estatus', 'abierta')->count() : 0;
+            $totalAlumnos     = $instructor ? $instructor->grupos->sum('cupo_ocupado') : 0;
             $totalCalificados = 0;
             $totalPendientes  = 0;
+
+            // Alumnos sin calificar para mostrar en la tabla del dashboard
+            $alumnosPendientes = collect();
+
             if ($instructor) {
                 foreach ($instructor->grupos as $grupo) {
                     foreach ($grupo->inscripciones as $inscripcion) {
@@ -62,6 +69,15 @@ class HomeController extends Controller
                             $totalCalificados++;
                         } else {
                             $totalPendientes++;
+                            // Agregar datos mínimos para la tabla
+                            $alumnosPendientes->push([
+                                'id_inscripcion' => $inscripcion->id_inscripcion,
+                                'nombre'         => optional($inscripcion->alumno->usuario)->nombre . ' '
+                                                  . optional($inscripcion->alumno->usuario)->apellido_paterno,
+                                'num_control'    => optional($inscripcion->alumno->usuario)->num_control,
+                                'actividad'      => optional($grupo->actividad)->nombre,
+                                'grupo'          => $grupo->grupo,
+                            ]);
                         }
                     }
                 }
@@ -69,15 +85,17 @@ class HomeController extends Controller
 
             return view('instructor.dashboard', compact(
                 'instructor',
+                'semestreActivo',
                 'totalGrupos',
                 'gruposActivos',
                 'totalAlumnos',
                 'totalCalificados',
-                'totalPendientes'
+                'totalPendientes',
+                'alumnosPendientes'
             ));
         }
 
-        // ── Dashboard por defecto (admin, coordinador, etc.) ──────────────
+        // ── ADMIN / COORDINADOR / etc. ────────────────────────────────────
         return view('home');
     }
 }
