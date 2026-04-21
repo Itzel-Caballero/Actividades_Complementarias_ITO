@@ -13,7 +13,7 @@ class CreateInscripcionTable extends Migration
 
         Schema::create('inscripcion', function (Blueprint $table) {
             $table->id('id_inscripcion');
-            $table->integer('id_alumno');
+            $table->unsignedBigInteger('id_alumno');
             $table->unsignedBigInteger('id_grupo');
             $table->datetime('fecha_inscripcion');
             $table->enum('estatus', ['inscrito', 'cursando', 'aprobado', 'reprobado', 'dado_de_baja'])->default('inscrito');

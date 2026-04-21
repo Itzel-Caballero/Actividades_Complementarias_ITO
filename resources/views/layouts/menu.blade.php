@@ -10,7 +10,7 @@
 {{-- ═══════════════════════════════════════════════════════════════ --}}
 @role('admin')
 
-<li class="{{ Request::is('usuarios*') || Request::is('roles*') || Request::is('admin/reportes/accesos*') ? 'active' : '' }}">
+<li class="{{ Request::is('usuarios*') || Request::is('roles*') || Request::is('admin/reportes/accesos*') || Request::is('admin/coordinadores*') ? 'active' : '' }}">
     <a class="nav-link has-dropdown" href="#">
         <i class="fas fa-user-shield"></i><span>Identidades y Acceso</span>
     </a>
@@ -23,6 +23,11 @@
         <li class="{{ Request::is('roles*') ? 'active' : '' }}">
             <a class="nav-link" href="{{ route('roles.index') }}">
                 <i class="fas fa-user-lock"></i><span>Roles y Permisos</span>
+            </a>
+        </li>
+        <li class="{{ Request::is('admin/coordinadores*') ? 'active' : '' }}">
+            <a class="nav-link" href="{{ route('admin.coordinadores.index') }}">
+                <i class="fas fa-user-tie"></i><span>Panel de Coordinadores</span>
             </a>
         </li>
         <li class="{{ Request::is('admin/reportes/accesos*') ? 'active' : '' }}">

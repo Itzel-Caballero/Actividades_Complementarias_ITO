@@ -253,6 +253,12 @@
                     </div>
                 @endif
 
+                @if(session('error'))
+                    <div class="err-box" style="background:#fff7ed;border-color:#fdba74;color:#c2410c;">
+                        <i class="fas fa-ban mr-1"></i> {{ session('error') }}
+                    </div>
+                @endif
+
                 <form method="POST" action="{{ route('login') }}">
                     @csrf
                     <div class="form-group mb-3">

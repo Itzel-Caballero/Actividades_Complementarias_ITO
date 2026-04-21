@@ -23,7 +23,7 @@ class CreateAlumnoTable extends Migration
             // Definimos la relación aquí mismo de forma fluida
             $table->foreign('id_alumno')
                   ->references('id')
-                  ->on('usuarios') // Asegúrate de que tu tabla de usuarios se llame 'usuarios' o 'USUARIO'
+                  ->on('USUARIO') // La tabla se llama 'USUARIO' (en mayúsculas)
                   ->onDelete('cascade'); // <--- ESTO ELIMINA AL ALUMNO CUANDO BORRES AL USUARIO
         });
 

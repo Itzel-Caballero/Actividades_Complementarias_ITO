@@ -12,7 +12,7 @@ class CreateInstructorTable extends Migration
         Schema::dropIfExists('instructor');
 
         Schema::create('instructor', function (Blueprint $table) {
-            $table->integer('id_instructor')->primary();
+            $table->unsignedBigInteger('id_instructor')->primary();
             $table->unsignedBigInteger('id_departamento');
             $table->string('especialidad', 100)->nullable();
             $table->timestamps();

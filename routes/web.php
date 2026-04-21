@@ -16,6 +16,7 @@ use App\Http\Controllers\Admin\SemestreController;
 use App\Http\Controllers\Admin\DepartamentoController;
 use App\Http\Controllers\Admin\UbicacionController;
 use App\Http\Controllers\Admin\ReporteController;
+use App\Http\Controllers\PanelCoordinadoresController;
 use App\Http\Controllers\AlumnoController;
 
 Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
@@ -45,7 +46,7 @@ Route::get('/debug-user', function () {
 })->middleware('auth');
 
 
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', 'usuario.activo'])->group(function () {
 
     Route::get('/home', [HomeController::class, 'index'])->name('home');
     Route::get('/alumno/dashboard',     fn() => view('home'))->name('alumno.dashboard');
@@ -108,6 +109,11 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/reportes/inscripciones', [ReporteController::class, 'inscripciones'])->name('reportes.inscripciones');
         Route::get('/reportes/accesos',       [ReporteController::class, 'accesos'])->name('reportes.accesos');
         Route::post('/admin/semestres', [SemestreController::class, 'store'])->name('admin.semestres.store');
+
+        // ─── Panel de Coordinadores ───────────────────────────────────────
+        Route::get('/coordinadores',              [PanelCoordinadoresController::class, 'index'])->name('coordinadores.index');
+        Route::post('/coordinadores/asignar',     [PanelCoordinadoresController::class, 'asignar'])->name('coordinadores.asignar');
+        Route::delete('/coordinadores/{id}/quitar', [PanelCoordinadoresController::class, 'quitar'])->name('coordinadores.quitar');
     });
 
 });

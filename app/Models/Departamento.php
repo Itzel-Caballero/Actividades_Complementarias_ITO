@@ -9,4 +9,12 @@ class Departamento extends Model
     protected $primaryKey = 'id_departamento';
 
     protected $fillable = ['nombre', 'edificio'];
+
+    /**
+     * Coordinador asignado a este departamento (si existe).
+     */
+    public function coordinadorDepartamento()
+    {
+        return $this->hasOne(CoordinadorDepartamento::class, 'id_departamento', 'id_departamento');
+    }
 }
