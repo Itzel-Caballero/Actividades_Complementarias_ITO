@@ -43,9 +43,9 @@
                                 <input type="text" name="apellido_materno" class="form-control" value="{{ old('apellido_materno') }}">
                             </div>
 
-                            <div class="form-group">
+                            <div class="form-group" id="campo_num_control">
                                 <label>Número de Control</label>
-                                <input type="text" name="num_control" class="form-control" value="{{ old('num_control') }}" required>
+                                <input type="text" name="num_control" class="form-control" value="{{ old('num_control') }}">
                             </div>
 
                             <div class="form-group">
@@ -58,7 +58,6 @@
                                 <input type="email" name="email" class="form-control" value="{{ old('email') }}" required>
                             </div>
 
-<<<<<<< HEAD
 <div class="form-group">
     <label>Tipo de usuario</label>
     <select name="tipo_usuario" id="tipo_usuario" class="form-control" required>
@@ -98,37 +97,6 @@
     <label>Contraseña</label>
     <input type="password" name="password" class="form-control" required>
 </div>
-=======
-                            <div class="form-group">
-                                <label>Tipo de usuario</label>
-                                {{-- Añadimos el ID 'tipo_usuario' para el script --}}
-                                <select name="tipo_usuario" id="tipo_usuario" class="form-control" required>
-                                    <option value="">-- Selecciona --</option>
-                                    <option value="alumno"     {{ old('tipo_usuario') == 'alumno'     ? 'selected' : '' }}>Alumno</option>
-                                    <option value="instructor" {{ old('tipo_usuario') == 'instructor' ? 'selected' : '' }}>Instructor</option>
-                                    <option value="admin"      {{ old('tipo_usuario') == 'admin'      ? 'selected' : '' }}>Admin</option>
-                                     <option value="coordinador"      {{ old('tipo_usuario') == 'coordinador'      ? 'selected' : '' }}>Coordinador</option>
-                                </select>
-                            </div>
-
-                            {{-- CAMPO CARRERA (Oculto por defecto) --}}
-                            <div class="form-group" id="campo_carrera" style="display: none; background: #f4f6f9; padding: 15px; border-radius: 5px; border-left: 5px solid #6777ef;">
-                                <label>Asignar Carrera <span class="text-danger">*</span></label>
-                                <select name="id_carrera" class="form-control">
-                                    <option value="">-- Selecciona una carrera --</option>
-                                    <option value="1">Ingeniería en Sistemas Computacionales</option>
-                                    <option value="2">Ingeniería en Gestión Empresarial</option>
-                                    <option value="3">Ingeniería Civil</option>
-                                    <option value="4">Ingeniería Industrial</option>
-                                    <option value="5">Ingeniería Mecánica</option>
-                                    <option value="6">Ingeniería Electrónica</option>
-                                    <option value="7">Ingeniería Eléctrica</option>
-                                    <option value="8">Ingeniería Química</option>
-                                    <option value="9">Licenciatura en Administración</option>
-                                    <option value="10">Licenciatura en Contaduría</option>
-                                </select>
-                            </div>
->>>>>>> 6684bd81b35d346dfbc15d05ac3906f3469b852e
 
                             <div class="form-group">
                                 <label>Contraseña</label>
@@ -166,7 +134,6 @@
     </div>
 </section>
 
-<<<<<<< HEAD
 @section('scripts')
 <script>
     function toggleCamposExtra() {
@@ -179,26 +146,4 @@
     toggleCamposExtra();
 </script>
 @endsection
-=======
-{{-- Script para mostrar/ocultar carrera --}}
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const selectTipo = document.getElementById('tipo_usuario');
-        const divCarrera = document.getElementById('campo_carrera');
-
-        function toggleCarrera() {
-            if (selectTipo.value === 'alumno') {
-                divCarrera.style.display = 'block';
-            } else {
-                divCarrera.style.display = 'none';
-            }
-        }
-
-        selectTipo.addEventListener('change', toggleCarrera);
-        
-        // Ejecutar al cargar por si hay un error de validación y el valor quedó marcado
-        toggleCarrera();
-    });
-</script>
->>>>>>> 6684bd81b35d346dfbc15d05ac3906f3469b852e
 @endsection
