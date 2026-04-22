@@ -17,18 +17,32 @@
                         <h4>Listado General</h4>
                         <form action="{{ route('usuarios.index') }}" method="GET" class="form-inline">
                             <div class="input-group">
-                                <input type="text" name="buscar" class="form-control form-control-sm"
-                                       placeholder="Buscar por nombre, email, N° control..."
-                                       value="{{ $buscar ?? '' }}">
                                 <div class="input-group-append">
                                     <button class="btn btn-primary btn-sm" type="submit">
                                         <i class="fa fa-search"></i>
                                     </button>
                                 </div>
+                                <input type="text" name="buscar" class="form-control form-control-sm"
+                                       placeholder="Buscar por nombre, email, N° control..."
+                                       value="{{ $buscar ?? '' }}">
+                                 
+                                <select name="tipo_usuario" class="form-control form-control-sm">
+                                    <option value="">Todos los tipos</option>
+                                    <option value="alumno"      {{ $tipo_usuario == 'alumno'      ? 'selected' : '' }}>Alumno</option>
+                                    <option value="instructor"  {{ $tipo_usuario == 'instructor'  ? 'selected' : '' }}>Instructor</option>
+                                    <option value="coordinador" {{ $tipo_usuario == 'coordinador' ? 'selected' : '' }}>Coordinador</option>
+                                </select>
+                            <button class="btn btn-primary btn-sm" type="submit">
+                                <i class="fa fa-filter"></i> Filtrar
+                            </button>
+                            <a href="{{ route('admin.reportes.alumnos') }}" class="btn btn-secondary btn-sm">
+                                <i class="fa fa-times"></i> Limpiar
+                            </a>
+                               
                             </div>
                         </form>
-                    </div>
-
+                    </div> 
+                    
                     <div class="card-body">
                         <div class="table-responsive">
                             <table class="table table-striped table-hover mt-3">
@@ -126,7 +140,7 @@
                         </div>
 
                         <div class="d-flex justify-content-end mt-2">
-                            {!! $usuarios->appends(['buscar' => $buscar ?? ''])->links() !!}
+                            {!! $usuarios->appends(['buscar' => $buscar ?? '', 'tipo_usuario' => $tipo_usuario ?? ''])->links() !!}
                         </div>
                     </div>
                 </div>

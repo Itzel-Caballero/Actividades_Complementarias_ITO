@@ -16,8 +16,8 @@ class UsuarioController extends Controller
 {
     public function index(Request $request)
     {
-        $buscar = trim($request->get('buscar'));
-        $filtro_rol = trim($request->get('rol', ''));
+        $buscar       = trim($request->get('buscar', ''));
+        $tipo_usuario = trim($request->get('tipo_usuario', ''));
 
         $usuarios = User::with('roles')
             ->where(function($query) use ($buscar) {
@@ -28,13 +28,13 @@ class UsuarioController extends Controller
                           ->orWhere('num_control', 'LIKE', '%' . $buscar . '%');
                 }
             })
-            ->when($filtro_rol, fn($q) =>
-                $q->whereHas('roles', fn($r) => $r->where('name', $filtro_rol))
+            ->when($tipo_usuario, fn($q) =>
+                $q->where('tipo_usuario', $tipo_usuario)
             )
             ->orderBy('id', 'desc')
             ->paginate(15);
 
-        return view('usuarios.index', compact('usuarios', 'buscar', 'filtro_rol'));
+        return view('usuarios.index', compact('usuarios', 'buscar', 'tipo_usuario'));
     }
 
     public function create()
