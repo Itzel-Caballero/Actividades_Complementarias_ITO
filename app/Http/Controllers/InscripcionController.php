@@ -31,6 +31,7 @@ class InscripcionController extends Controller
         // Historial (aprobado, reprobado, dado_de_baja)
         $historial = Inscripcion::with([
             'grupo.actividad',
+            'calificaciones',
         ])->where('id_alumno', $alumno->id_alumno)
           ->whereIn('estatus', ['aprobado', 'reprobado', 'dado_de_baja'])
           ->orderByDesc('updated_at')
@@ -55,6 +56,13 @@ class InscripcionController extends Controller
 
     public function store(Request $request)
     {
+        $request->validate([
+            'id_grupo' => 'required|integer|exists:grupo,id_grupo',
+        ], [
+            'id_grupo.required' => 'Debes seleccionar un grupo.',
+            'id_grupo.exists'   => 'El grupo seleccionado no existe.',
+        ]);
+
         $user   = auth()->user();
         $alumno = Alumno::where('id_alumno', $user->id)->first();
 

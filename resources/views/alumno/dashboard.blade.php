@@ -147,6 +147,14 @@
                                     <p class="mb-0 small text-muted">Ve tu actividad actual e historial</p>
                                 </div>
                             </a>
+                            <a href="{{ route('alumno.perfil') }}"
+                               class="list-group-item list-group-item-action d-flex align-items-center">
+                                <i class="fas fa-user-edit fa-lg text-warning mr-3"></i>
+                                <div>
+                                    <strong>Mi Perfil</strong>
+                                    <p class="mb-0 small text-muted">Edita tus datos y contraseña</p>
+                                </div>
+                            </a>
                         </div>
                     </div>
                 </div>

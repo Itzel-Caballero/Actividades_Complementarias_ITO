@@ -110,6 +110,11 @@
         <i class="fas fa-clipboard-list"></i><span>Mis Inscripciones</span>
     </a>
 </li>
+<li class="{{ Request::is('alumno/perfil*') ? 'active' : '' }}">
+    <a class="nav-link" href="{{ route('alumno.perfil') }}">
+        <i class="fas fa-user-edit"></i><span>Mi Perfil</span>
+    </a>
+</li>
 @endrole
 
 {{-- ═══════════════════════════════════════════════════════════════ --}}

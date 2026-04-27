@@ -70,6 +70,10 @@ Route::middleware(['auth', 'usuario.activo'])->group(function () {
 
     Route::post('/perfil/actualizar', [PerfilController::class, 'update'])->name('perfil.update');
 
+    // ─── Perfil completo del alumno ───────────────────────────────────────
+    Route::get('/alumno/perfil',    [PerfilController::class, 'show'])->name('alumno.perfil');
+    Route::put('/alumno/perfil',    [PerfilController::class, 'updateCompleto'])->name('alumno.perfil.update');
+
     Route::post('/inscripciones', [InscripcionController::class, 'store'])->name('inscripciones.store');
     Route::get('/mis-inscripciones', [InscripcionController::class, 'index'])->name('inscripciones.index');
     Route::post('/inscripciones/{inscripcion}/baja', [InscripcionController::class, 'darBaja'])->name('inscripciones.baja');

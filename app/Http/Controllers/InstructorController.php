@@ -7,6 +7,7 @@ use App\Models\Instructor;
 use App\Models\Inscripcion;
 use App\Models\Calificacion;
 use App\Models\Semestre;
+use App\Models\Alumno;
 
 class InstructorController extends Controller
 {
@@ -98,12 +99,14 @@ class InstructorController extends Controller
             'observaciones' => 'nullable|string|max:255',
         ]);
 
-        $inscripcion = Inscripcion::with('calificaciones')->findOrFail($id_inscripcion);
+        $inscripcion = Inscripcion::with(['calificaciones', 'grupo.actividad'])->findOrFail($id_inscripcion);
 
         abort_unless(
             $instructor->grupos->contains('id_grupo', $inscripcion->id_grupo),
             403
         );
+
+        $estatusAnterior = $inscripcion->estatus;
 
         Calificacion::updateOrCreate(
             ['id_inscripcion' => $id_inscripcion],
@@ -114,10 +117,30 @@ class InstructorController extends Controller
         );
 
         // Aprobado si bueno o excelente; reprobado si malo
-        $inscripcion->estatus = in_array($request->desempenio, ['bueno', 'excelente'])
+        $nuevoEstatus = in_array($request->desempenio, ['bueno', 'excelente'])
             ? 'aprobado'
             : 'reprobado';
+
+        $inscripcion->estatus = $nuevoEstatus;
         $inscripcion->save();
+
+        // Sumar créditos al alumno solo cuando pasa a aprobado por primera vez
+        if ($nuevoEstatus === 'aprobado' && $estatusAnterior !== 'aprobado') {
+            $creditos = optional($inscripcion->grupo->actividad)->creditos ?? 0;
+            if ($creditos > 0) {
+                Alumno::where('id_alumno', $inscripcion->id_alumno)
+                    ->increment('creditos_acumulados', $creditos);
+            }
+        }
+
+        // Si se revierte de aprobado a reprobado, descontar créditos
+        if ($nuevoEstatus === 'reprobado' && $estatusAnterior === 'aprobado') {
+            $creditos = optional($inscripcion->grupo->actividad)->creditos ?? 0;
+            if ($creditos > 0) {
+                Alumno::where('id_alumno', $inscripcion->id_alumno)
+                    ->decrement('creditos_acumulados', $creditos);
+            }
+        }
 
         return redirect()
             ->route('instructor.mis-grupos')

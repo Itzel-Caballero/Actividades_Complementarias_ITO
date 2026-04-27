@@ -159,26 +159,48 @@
                                 <th>Grupo</th>
                                 <th>Créditos</th>
                                 <th>Estatus</th>
+                                <th>Desempeño</th>
+                                <th>Observaciones</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach ($historial as $item)
+                                @php
+                                    $calificacion = $item->calificaciones->first();
+                                    $colores = [
+                                        'aprobado'     => 'success',
+                                        'reprobado'    => 'danger',
+                                        'dado_de_baja' => 'secondary',
+                                    ];
+                                    $color = $colores[$item->estatus] ?? 'secondary';
+                                    $iconosDesempenio = [
+                                        'excelente' => ['color' => 'success', 'icon' => 'fa-star',        'label' => 'Excelente'],
+                                        'bueno'     => ['color' => 'info',    'icon' => 'fa-thumbs-up',   'label' => 'Bueno'],
+                                        'malo'      => ['color' => 'danger',  'icon' => 'fa-thumbs-down', 'label' => 'Malo'],
+                                    ];
+                                    $desempenioInfo = $calificacion ? ($iconosDesempenio[$calificacion->desempenio] ?? null) : null;
+                                @endphp
                                 <tr>
                                     <td>{{ $item->grupo->actividad->nombre ?? 'N/A' }}</td>
                                     <td>{{ $item->grupo->grupo ?? 'N/A' }}</td>
                                     <td>{{ $item->grupo->actividad->creditos ?? '-' }}</td>
                                     <td>
-                                        @php
-                                            $colores = [
-                                                'aprobado'      => 'success',
-                                                'reprobado'     => 'danger',
-                                                'dado_de_baja'  => 'secondary',
-                                            ];
-                                            $color = $colores[$item->estatus] ?? 'secondary';
-                                        @endphp
                                         <span class="badge badge-{{ $color }}">
                                             {{ ucfirst(str_replace('_', ' ', $item->estatus)) }}
                                         </span>
+                                    </td>
+                                    <td>
+                                        @if ($desempenioInfo)
+                                            <span class="text-{{ $desempenioInfo['color'] }}">
+                                                <i class="fas {{ $desempenioInfo['icon'] }}"></i>
+                                                {{ $desempenioInfo['label'] }}
+                                            </span>
+                                        @else
+                                            <span class="text-muted">—</span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        {{ $calificacion->observaciones ?? '—' }}
                                     </td>
                                 </tr>
                             @endforeach
