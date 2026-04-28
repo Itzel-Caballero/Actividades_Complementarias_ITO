@@ -162,11 +162,27 @@ class InstructorController extends Controller
         $instructor = $this->getInstructor();
 
         $request->validate([
-            'nombre'           => 'required|string|max:100',
-            'apellido_paterno' => 'required|string|max:100',
-            'apellido_materno' => 'nullable|string|max:100',
-            'telefono'         => 'nullable|string|max:20',
-            'especialidad'     => 'nullable|string|max:100',
+            'nombre'           => ['required', 'string', 'min:2', 'max:50', 'regex:/^[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s]+$/u'],
+            'apellido_paterno' => ['required', 'string', 'min:2', 'max:50', 'regex:/^[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s]+$/u'],
+            'apellido_materno' => ['nullable', 'string', 'min:2', 'max:50', 'regex:/^[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s]+$/u'],
+            'telefono'         => ['nullable', 'regex:/^[0-9]{10}$/'],
+            'especialidad'     => ['nullable', 'string', 'min:3', 'max:100', 'regex:/^[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ0-9\s\-\.]+$/u'],
+        ], [
+            'nombre.required'           => 'El nombre es obligatorio.',
+            'nombre.min'                => 'El nombre debe tener al menos 2 caracteres.',
+            'nombre.max'                => 'El nombre no puede exceder 50 caracteres.',
+            'nombre.regex'              => 'El nombre solo puede contener letras y espacios.',
+            'apellido_paterno.required' => 'El apellido paterno es obligatorio.',
+            'apellido_paterno.min'      => 'El apellido paterno debe tener al menos 2 caracteres.',
+            'apellido_paterno.max'      => 'El apellido paterno no puede exceder 50 caracteres.',
+            'apellido_paterno.regex'    => 'El apellido paterno solo puede contener letras y espacios.',
+            'apellido_materno.min'      => 'El apellido materno debe tener al menos 2 caracteres.',
+            'apellido_materno.max'      => 'El apellido materno no puede exceder 50 caracteres.',
+            'apellido_materno.regex'    => 'El apellido materno solo puede contener letras y espacios.',
+            'telefono.regex'            => 'El teléfono debe contener exactamente 10 dígitos numéricos.',
+            'especialidad.min'          => 'La especialidad debe tener al menos 3 caracteres.',
+            'especialidad.max'          => 'La especialidad no puede exceder 100 caracteres.',
+            'especialidad.regex'        => 'La especialidad contiene caracteres no permitidos.',
         ]);
 
         $user->update([
