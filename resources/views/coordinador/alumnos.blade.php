@@ -96,7 +96,7 @@
                             @endphp
                             <tr>
                                 <td>{{ $loop->iteration }}</td>
-                                <td><code>{{ $alumno->usuario->num_control ?? '—' }}</code></td>
+                                <td><code>{{ $alumno->num_control ?? '—' }}</code></td>
                                 <td><strong>{{ $alumno->usuario->nombre_completo ?? 'N/A' }}</strong></td>
                                 <td>
                                     <span class="badge badge-info" style="font-size:11px;">
@@ -192,25 +192,24 @@ if (buscarInput) {
     });
 }
 
-// ── Confirmación de baja ──────────────────────────────────────────────────
+// ── Confirmación de baja (SweetAlert2) ────────────────────────────────────
 function confirmarBaja(idInscripcion, nombreAlumno, nombreActividad) {
-    swal({
+    Swal.fire({
         title: 'Dar de baja',
-        content: (function() {
-            const div = document.createElement('div');
-            div.innerHTML = '¿Deseas dar de baja a <strong>' + nombreAlumno + '</strong>'
-                + ' de la actividad <strong>' + nombreActividad + '</strong>?'
-                + '<br><br><small class="text-muted">Esta acción se conservará en el historial con estatus "baja".</small>';
-            return div;
-        })(),
+        html: '¿Deseas dar de baja a <strong>' + nombreAlumno + '</strong>'
+            + ' de la actividad <strong>' + nombreActividad + '</strong>?'
+            + '<br><br><small class="text-muted">Esta acción se conservará en el historial con estatus "dado de baja".</small>',
         icon: 'warning',
-        buttons: {
-            cancel: { text: 'Cancelar', visible: true, className: 'btn btn-secondary' },
-            confirm: { text: 'Sí, dar de baja', className: 'btn btn-danger' }
-        },
-        dangerMode: true,
-    }).then(function(ok) {
-        if (ok) document.getElementById('form-baja-' + idInscripcion).submit();
+        showCancelButton: true,
+        confirmButtonText: 'Sí, dar de baja',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        reverseButtons: true,
+    }).then((result) => {
+        if (result.isConfirmed) {
+            document.getElementById('form-baja-' + idInscripcion).submit();
+        }
     });
 }
 </script>

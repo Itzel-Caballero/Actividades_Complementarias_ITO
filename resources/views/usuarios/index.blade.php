@@ -23,26 +23,25 @@
                                     </button>
                                 </div>
                                 <input type="text" name="buscar" class="form-control form-control-sm"
-                                       placeholder="Buscar por nombre, email, N° control..."
+                                       placeholder="Buscar por nombre, email o N° control (alumno)..."
                                        value="{{ $buscar ?? '' }}">
-                                 
+
                                 <select name="tipo_usuario" class="form-control form-control-sm">
                                     <option value="">Todos los tipos</option>
                                     <option value="alumno"      {{ $tipo_usuario == 'alumno'      ? 'selected' : '' }}>Alumno</option>
                                     <option value="instructor"  {{ $tipo_usuario == 'instructor'  ? 'selected' : '' }}>Instructor</option>
                                     <option value="coordinador" {{ $tipo_usuario == 'coordinador' ? 'selected' : '' }}>Coordinador</option>
                                 </select>
-                            <button class="btn btn-primary btn-sm" type="submit">
-                                <i class="fa fa-filter"></i> Filtrar
-                            </button>
-                            <a href="{{ route('admin.reportes.alumnos') }}" class="btn btn-secondary btn-sm">
-                                <i class="fa fa-times"></i> Limpiar
-                            </a>
-                               
+                                <button class="btn btn-primary btn-sm" type="submit">
+                                    <i class="fa fa-filter"></i> Filtrar
+                                </button>
+                                <a href="{{ route('usuarios.index') }}" class="btn btn-secondary btn-sm">
+                                    <i class="fa fa-times"></i> Limpiar
+                                </a>
                             </div>
                         </form>
-                    </div> 
-                    
+                    </div>
+
                     <div class="card-body">
                         <div class="table-responsive">
                             <table class="table table-striped table-hover mt-3">
@@ -52,6 +51,7 @@
                                         <th>Nombre Completo</th>
                                         <th>Email</th>
                                         <th>Tipo</th>
+                                        <th>N° Control</th>
                                         <th class="text-center">Estatus</th>
                                         <th class="text-center">Acciones</th>
                                     </tr>
@@ -72,6 +72,13 @@
                                             <span class="badge badge-light border">
                                                 {{ ucfirst($usuario->tipo_usuario ?? '—') }}
                                             </span>
+                                        </td>
+                                        <td>
+                                            @if($usuario->tipo_usuario === 'alumno' && $usuario->alumno)
+                                                <span class="badge badge-info">{{ $usuario->alumno->num_control ?? '—' }}</span>
+                                            @else
+                                                <span class="text-muted">—</span>
+                                            @endif
                                         </td>
                                         <td class="text-center">
                                             @if($usuario->activo)
@@ -129,7 +136,7 @@
                                     </tr>
                                     @empty
                                     <tr>
-                                        <td colspan="6" class="text-center text-muted py-4">
+                                        <td colspan="7" class="text-center text-muted py-4">
                                             <i class="fas fa-search mr-1"></i>
                                             No hay registros que coincidan con la búsqueda.
                                         </td>
@@ -162,9 +169,9 @@
     @endif
 
     function alertaToggle(nombre, id, activar) {
-        const accion  = activar ? 'habilitar' : 'deshabilitar';
-        const icono   = activar ? 'success'   : 'warning';
-        const btnColor = activar ? '#28a745'  : '#e3342f';
+        const accion   = activar ? 'habilitar' : 'deshabilitar';
+        const icono    = activar ? 'success'   : 'warning';
+        const btnColor = activar ? '#28a745'   : '#e3342f';
 
         Swal.fire({
             title: '¿Confirmar acción?',

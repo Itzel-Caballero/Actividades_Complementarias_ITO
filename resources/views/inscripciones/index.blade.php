@@ -67,15 +67,9 @@
                         </div>
                     </div>
                 </div>
-                <div class="card-footer">
-                    <form action="{{ route('inscripciones.baja', $inscripcionActiva->id_inscripcion) }}"
-                          method="POST"
-                          onsubmit="return confirm('¿Estás seguro de que deseas darte de baja? Podrás inscribirte a otra actividad.')">
-                        @csrf
-                        <button type="submit" class="btn btn-danger btn-sm">
-                            <i class="fa fa-sign-out-alt"></i> Darme de baja
-                        </button>
-                    </form>
+                {{-- Nota: La baja solo puede realizarla el coordinador del departamento --}}
+                <div class="card-footer text-muted small">
+                    <i class="fa fa-info-circle"></i> Si deseas darte de baja, solicítalo al coordinador del departamento que ofrece la actividad.
                 </div>
             </div>
 
@@ -87,9 +81,12 @@
                     <p class="text-muted mb-4">
                         Explora el catálogo y elige la actividad complementaria que más te interese.
                     </p>
+                    @php $semestreActivo = \App\Models\Semestre::where('status', 'activo')->exists(); @endphp
+                    @if ($semestreActivo)
                     <a href="{{ route('actividades.index') }}" class="btn btn-primary">
                         <i class="fas fa-search"></i> Ir al Catálogo de Actividades
                     </a>
+                    @endif
                 </div>
             </div>
         @endif
@@ -98,51 +95,7 @@
              SECCIÓN 2: OTRAS ACTIVIDADES DISPONIBLES
              (solo se muestra si NO tiene inscripción activa)
         ══════════════════════════════════════════ --}}
-        @if ($otrasActividades)
-            <h5 class="mb-3">Otras Actividades (si deseas cambiarte)</h5>
-            <div class="row mb-4">
-                @forelse ($otrasActividades as $actividad)
-                    <div class="col-md-4 mb-3">
-                        <div class="card h-100">
-                            <div class="card-header d-flex justify-content-between align-items-center">
-                                <h6 class="mb-0">{{ $actividad->nombre }}</h6>
-                                <span class="badge badge-{{ $actividad->creditos == 2 ? 'success' : 'info' }}">
-                                    {{ $actividad->creditos }} crédito(s)
-                                </span>
-                            </div>
-                            <div class="card-body">
-                                <p class="text-muted small">{{ Str::limit($actividad->descripcion, 80) }}</p>
-                                <p class="mb-1 small">
-                                    <strong>Departamento:</strong>
-                                    {{ $actividad->departamento->nombre ?? 'N/A' }}
-                                </p>
-                                <p class="mb-1 small">
-                                    <strong>Grupos abiertos:</strong>
-                                    {{ $actividad->grupos->where('estatus', 'abierta')->count() }}
-                                </p>
-                            </div>
-                            <div class="card-footer">
-                                @if ($actividad->grupos->where('estatus', 'abierta')->count() > 0)
-                                    <a href="{{ route('actividades.show', $actividad->id_actividad) }}"
-                                       class="btn btn-primary btn-sm">
-                                        <i class="fa fa-eye"></i> Ver grupos e inscribirme
-                                    </a>
-                                @else
-                                    <span class="btn btn-secondary btn-sm disabled">Sin grupos abiertos</span>
-                                @endif
-                            </div>
-                        </div>
-                    </div>
-                @empty
-                    <div class="col-12">
-                        <div class="alert alert-warning">No hay actividades disponibles por el momento.</div>
-                    </div>
-                @endforelse
-            </div>
-            <div class="d-flex justify-content-center mb-4">
-                {!! $otrasActividades->links() !!}
-            </div>
-        @endif
+        
 
         {{-- ══════════════════════════════════════════
              SECCIÓN 3: HISTORIAL

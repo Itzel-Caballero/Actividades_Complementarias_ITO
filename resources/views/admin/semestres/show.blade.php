@@ -48,6 +48,24 @@
             </div>
         </div>
 
+        {{-- Actividades del periodo --}}
+        @if($semestre->actividades->isNotEmpty())
+        <div class="card mb-4">
+            <div class="card-header"><h4>Actividades de este periodo</h4></div>
+            <div class="card-body">
+                <div class="row">
+                    @foreach($semestre->actividades as $actividad)
+                    <div class="col-md-4 mb-2">
+                        <span class="badge badge-info p-2" style="font-size:12px;">
+                            {{ $actividad->nombre }}
+                        </span>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+        @endif
+
         {{-- Grupos del periodo --}}
         @forelse($semestre->grupos as $grupo)
         <div class="card mb-4">

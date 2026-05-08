@@ -100,11 +100,14 @@
 {{-- Menú para ALUMNO --}}
 {{-- ═══════════════════════════════════════════════════════════════ --}}
 @role('alumno')
+@php $semestreActivo = \App\Models\Semestre::where('status', 'activo')->exists(); @endphp
+@if ($semestreActivo)
 <li class="{{ Request::is('actividades*') ? 'active' : '' }}">
     <a class="nav-link" href="/actividades">
         <i class="fas fa-th-list"></i><span>Catálogo de Actividades</span>
     </a>
 </li>
+@endif
 <li class="{{ Request::is('mis-inscripciones*') ? 'active' : '' }}">
     <a class="nav-link" href="/mis-inscripciones">
         <i class="fas fa-clipboard-list"></i><span>Mis Inscripciones</span>

@@ -16,8 +16,11 @@ class ActividadComplementariaController extends Controller
     {
         $user = auth()->user();
 
+        // Obtener el semestre activo para filtrar actividades
+        $semestreActivo = \App\Models\Semestre::where('status', 'activo')->first();
+
         if ($user->hasRole('admin')) {
-            $actividades = ActividadComplementaria::with(['departamento', 'grupos', 'carreras'])
+            $actividades = ActividadComplementaria::with(['departamento', 'grupos', 'carreras', 'semestre'])
                 ->paginate(10);
             return view('actividades.admin_index', compact('actividades'));
         }
@@ -33,9 +36,15 @@ class ActividadComplementariaController extends Controller
             return view('actividades.instructor_grupos', compact('grupos'));
         }
 
-        $actividades = ActividadComplementaria::with(['departamento', 'grupos', 'carreras'])
-            ->where('disponible', true)
-            ->paginate(9);
+        // Para alumnos: solo actividades del semestre activo
+        $actividadesQuery = ActividadComplementaria::with(['departamento', 'grupos', 'carreras'])
+            ->where('disponible', true);
+
+        if ($semestreActivo) {
+            $actividadesQuery->where('id_semestre', $semestreActivo->id_semestre);
+        }
+
+        $actividades = $actividadesQuery->paginate(9);
 
         $inscripcionActiva = null;
         $alumno = Alumno::where('id_alumno', $user->id)->first();
@@ -82,10 +91,14 @@ class ActividadComplementariaController extends Controller
             'creditos'        => 'required|in:1,2',
         ]);
 
+        // Asignar automáticamente al semestre activo
+        $semestreActivo = \App\Models\Semestre::where('status', 'activo')->first();
+
         $actividad = ActividadComplementaria::create([
             'nombre'          => $request->nombre,
             'descripcion'     => $request->descripcion,
             'id_departamento' => $request->id_departamento,
+            'id_semestre'     => $semestreActivo ? $semestreActivo->id_semestre : null,
             'creditos'        => $request->creditos,
             'nivel_actividad' => $request->nivel_actividad,
             'disponible'      => $request->has('disponible') ? (int)$request->disponible : 1,

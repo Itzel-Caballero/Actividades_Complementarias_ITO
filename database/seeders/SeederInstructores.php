@@ -80,7 +80,7 @@ class SeederInstructores extends Seeder
                 'email'            => $data['email'],
                 'contrasena'       => Hash::make('123456'),
                 'tipo_usuario'     => 'instructor',
-                'num_control'      => null,
+                
                 'telefono'         => $data['telefono'],
                 'ultimo_acceso'    => null,
             ]);

@@ -40,10 +40,16 @@ class InscripcionController extends Controller
         // Otras actividades disponibles (solo si YA tiene inscripción activa, para ver opciones de cambio)
         $otrasActividades = null;
         if ($inscripcionActiva) {
-            $otrasActividades = ActividadComplementaria::with(['departamento', 'grupos'])
+            $semestreActivo = \App\Models\Semestre::where('status', 'activo')->first();
+            $query = ActividadComplementaria::with(['departamento', 'grupos'])
                 ->where('disponible', true)
-                ->where('id_actividad', '!=', $inscripcionActiva->grupo->id_actividad)
-                ->paginate(6);
+                ->where('id_actividad', '!=', $inscripcionActiva->grupo->id_actividad);
+
+            if ($semestreActivo) {
+                $query->where('id_semestre', $semestreActivo->id_semestre);
+            }
+
+            $otrasActividades = $query->paginate(6);
         }
 
         return view('inscripciones.index', compact(
@@ -83,6 +89,13 @@ class InscripcionController extends Controller
 
         $grupo = Grupo::findOrFail($request->id_grupo);
 
+        // Verificar que el grupo pertenece al semestre activo
+        $semestreActivo = \App\Models\Semestre::where('status', 'activo')->first();
+        if (!$semestreActivo || $grupo->id_semestre !== $semestreActivo->id_semestre) {
+            return redirect()->back()
+                ->with('error', 'El grupo no pertenece al periodo activo actual.');
+        }
+
         // Verificar que hay cupo
         if ($grupo->cupo_ocupado >= $grupo->cupo_maximo) {
             return redirect()->back()
@@ -99,7 +112,8 @@ class InscripcionController extends Controller
                 ->with('error', 'Ya estuviste inscrito en este grupo.');
         }
 
-        // Crear inscripción
+        // Crear inscripción (el índice único uq_inscripcion_activa a nivel DB
+        // garantiza que un alumno solo pueda tener una inscripción activa)
         Inscripcion::create([
             'id_alumno'         => $alumno->id_alumno,
             'id_grupo'          => $grupo->id_grupo,
@@ -115,26 +129,9 @@ class InscripcionController extends Controller
 
 public function darBaja(Inscripcion $inscripcion)
     {
-        $user   = auth()->user();
-        $alumno = Alumno::where('id_alumno', $user->id)->first();
-
-        // Verificar que la inscripción pertenece al alumno
-        if (!$alumno || $inscripcion->id_alumno !== $alumno->id_alumno) {
-            return redirect()->back()
-                ->with('error', 'No tienes permiso para realizar esta acción.');
-        }
-
-        // Solo se puede dar de baja si está inscrito o cursando
-        if (!in_array($inscripcion->estatus, ['inscrito', 'cursando'])) {
-            return redirect()->back()
-                ->with('error', 'No puedes darte de baja de esta inscripción.');
-        }
-
-        // Cambiar estatus y liberar cupo
-        $inscripcion->update(['estatus' => 'dado_de_baja']);
-        $inscripcion->grupo->decrement('cupo_ocupado');
-
+        // Los alumnos ya no pueden darse de baja por sí mismos.
+        // Solo el coordinador del departamento puede dar de baja a un alumno.
         return redirect()->route('inscripciones.index')
-            ->with('success', 'Te has dado de baja correctamente. Ahora puedes inscribirte a otra actividad.');
+            ->with('error', 'No puedes darte de baja por ti mismo. Solicita la baja al coordinador del departamento que ofrece la actividad.');
     }
 }

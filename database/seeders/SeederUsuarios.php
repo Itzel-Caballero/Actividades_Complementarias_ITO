@@ -21,7 +21,6 @@ class SeederUsuarios extends Seeder
             'email'            => 'admin@gmail.com',
             'contrasena'       => Hash::make('123456'),
             'tipo_usuario'     => 'admin',
-            'num_control'      => null,
             'telefono'         => '9511000001',
             'ultimo_acceso'    => null,
         ]);
@@ -35,7 +34,6 @@ class SeederUsuarios extends Seeder
             'email'            => 'cord@gmail.com',
             'contrasena'       => Hash::make('123456'),
             'tipo_usuario'     => 'coordinador',
-            'num_control'      => null,
             'telefono'         => '9511000002',
             'ultimo_acceso'    => null,
         ]);
@@ -49,7 +47,6 @@ class SeederUsuarios extends Seeder
             'email'            => 'maestro@gmail.com',
             'contrasena'       => Hash::make('123456'),
             'tipo_usuario'     => 'instructor',
-            'num_control'      => null,
             'telefono'         => '9511000003',
             'ultimo_acceso'    => null,
         ]);
@@ -67,7 +64,7 @@ class SeederUsuarios extends Seeder
             ]);
         }
 
-        // ── Alumno ─────────────────────────────────────────────────────
+        // ── Alumno de ejemplo ──────────────────────────────────────────
         $alumno = User::create([
             'nombre'           => 'Ana',
             'apellido_paterno' => 'Martínez',
@@ -75,17 +72,16 @@ class SeederUsuarios extends Seeder
             'email'            => 'alumno@gmail.com',
             'contrasena'       => Hash::make('123456'),
             'tipo_usuario'     => 'alumno',
-            'num_control'      => '20230001',
             'telefono'         => '9511000004',
             'ultimo_acceso'    => null,
         ]);
         $alumno->assignRole('alumno');
 
-        // Registrar en tabla alumno
         $carrera = DB::table('carrera')->first();
         if ($carrera) {
             DB::table('alumno')->insert([
                 'id_alumno'           => $alumno->id,
+                'num_control'         => '20230001',
                 'id_carrera'          => $carrera->id_carrera,
                 'semestre_cursando'   => 5,
                 'creditos_acumulados' => 0,
@@ -94,7 +90,7 @@ class SeederUsuarios extends Seeder
             ]);
         }
 
-        // ── 100 alumnos de prueba ─────────────────────────────────────────────
+        // ── 100 alumnos de prueba ──────────────────────────────────────
         $nombres = [
             'Alejandro','Brenda','Carlos','Diana','Eduardo','Fernanda','Gabriel','Hilda',
             'Iván','Juana','Kevin','Laura','Miguel','Ángela','Omar','Patricia','Quirino',
@@ -110,22 +106,24 @@ class SeederUsuarios extends Seeder
         ];
         $apellidos_m = [
             'Luna','Vega','Castro','Salinas','Fuentes','Escobar','Mora','Tapia',
-            'Guérrero','Nava','Bravo','Ibarra','Palma','Delgado','Montes','Avila',
+            'Guerrero','Nava','Bravo','Ibarra','Palma','Delgado','Montes','Avila',
             'Rios','Cabrera','Herrera','Medina','Ponce','Aguilar','Bernal','Cisneros',
         ];
 
         $carreras  = DB::table('carrera')->pluck('id_carrera')->toArray();
-        $semestres = [1,2,3,4,5,6,7,8,9];
+        $semestres = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 
         for ($i = 1; $i <= 100; $i++) {
             $nombre    = $nombres[array_rand($nombres)];
             $ap        = $apellidos_p[array_rand($apellidos_p)];
             $am        = $apellidos_m[array_rand($apellidos_m)];
+            // num_control: varchar(9) — formato 4 dígitos de año + 4 dígitos de secuencia = 8 chars
             $numCtrl   = '2024' . str_pad($i, 4, '0', STR_PAD_LEFT);
             $email     = 'alumno' . str_pad($i, 3, '0', STR_PAD_LEFT) . '@gmail.com';
             $idCarrera = $carreras[array_rand($carreras)];
             $semestre  = $semestres[array_rand($semestres)];
 
+            // El usuario ya NO lleva num_control
             $nuevoAlumno = User::create([
                 'nombre'           => $nombre,
                 'apellido_paterno' => $ap,
@@ -133,15 +131,16 @@ class SeederUsuarios extends Seeder
                 'email'            => $email,
                 'contrasena'       => Hash::make('123456'),
                 'tipo_usuario'     => 'alumno',
-                'num_control'      => $numCtrl,
                 'telefono'         => '951' . rand(1000000, 9999999),
                 'ultimo_acceso'    => null,
             ]);
 
             $nuevoAlumno->assignRole('alumno');
 
+            // num_control se guarda en la tabla alumno
             DB::table('alumno')->insert([
                 'id_alumno'           => $nuevoAlumno->id,
+                'num_control'         => $numCtrl,
                 'id_carrera'          => $idCarrera,
                 'semestre_cursando'   => $semestre,
                 'creditos_acumulados' => rand(0, 10),

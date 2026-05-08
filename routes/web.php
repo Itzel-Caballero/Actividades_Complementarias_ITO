@@ -65,7 +65,7 @@ Route::middleware(['auth', 'usuario.activo'])->group(function () {
     Route::resource('usuarios',    UsuarioController::class);
     Route::patch('/usuarios/{usuario}/toggle', [UsuarioController::class, 'toggle'])->name('usuarios.toggle');
     Route::resource('blogs',       BlogController::class);
-    Route::resource('actividades', ActividadComplementariaController::class);
+    Route::resource('actividades', ActividadComplementariaController::class)->middleware('semestre.activo');
     Route::resource('grupos',      GrupoController::class);
     Route::patch('/grupos/{grupo}/asignar-instructor', [GrupoController::class, 'asignarInstructor'])->name('grupos.asignar-instructor');
 
@@ -75,9 +75,8 @@ Route::middleware(['auth', 'usuario.activo'])->group(function () {
     Route::get('/alumno/perfil',    [PerfilController::class, 'show'])->name('alumno.perfil');
     Route::put('/alumno/perfil',    [PerfilController::class, 'updateCompleto'])->name('alumno.perfil.update');
 
-    Route::post('/inscripciones', [InscripcionController::class, 'store'])->name('inscripciones.store');
+    Route::post('/inscripciones', [InscripcionController::class, 'store'])->name('inscripciones.store')->middleware('semestre.activo');
     Route::get('/mis-inscripciones', [InscripcionController::class, 'index'])->name('inscripciones.index');
-    Route::post('/inscripciones/{inscripcion}/baja', [InscripcionController::class, 'darBaja'])->name('inscripciones.baja');
     Route::get('/constancia/{id_inscripcion}', [ConstanciaController::class, 'descargar'])->name('constancia.descargar');
 
     // ─── Coordinador ──────────────────────────────────────────────────────

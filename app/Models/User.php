@@ -21,7 +21,6 @@ class User extends Authenticatable
         'email',
         'contrasena',
         'tipo_usuario',
-        'num_control',
         'telefono',
         'activo',
         'ultimo_acceso',

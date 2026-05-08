@@ -26,7 +26,6 @@ class RegisterController extends Controller
         $this->middleware('guest');
     }
 
-    // Pasar carreras y departamentos a la vista
     public function showRegistrationForm()
     {
         $carreras      = Carrera::orderBy('nombre')->get();
@@ -63,19 +62,20 @@ class RegisterController extends Controller
 
         if ($tipo === 'alumno') {
             $rules['id_carrera']  = ['required', 'exists:carrera,id_carrera'];
+            // num_control: varchar(9), único en tabla alumno
+            // Formatos válidos: 8 dígitos (22169853) o C + 8 dígitos (C22168365)
             $rules['num_control'] = [
                 'required',
-                'regex:/^(\d{8}|C\d{8})$/',
-                function ($attribute, $value, $fail) {
-                    $numeric = (int) preg_replace('/^\D+/', '', $value);
-                    if (User::where('num_control', $numeric)->exists()) {
-                        $fail('Este número de control ya está registrado en el sistema.');
-                    }
-                },
+                'string',
+                'max:9',
+                'regex:/^C?\d{8}$/',
+                Rule::unique('alumno', 'num_control'),
             ];
 
             $messages['num_control.required'] = 'El número de control es obligatorio.';
-            $messages['num_control.regex']     = 'El número de control debe ser de 8 dígitos numéricos (Ej: 20310001) o iniciar con "C" seguido de 8 dígitos (Ej: C20310001).';
+            $messages['num_control.max']       = 'El número de control no puede tener más de 9 caracteres.';
+            $messages['num_control.regex']     = 'El número de control debe ser de 8 dígitos (Ej: 22169853) o iniciar con "C" seguido de 8 dígitos (Ej: C22168365).';
+            $messages['num_control.unique']    = 'Este número de control ya está registrado en el sistema.';
             $messages['id_carrera.required']   = 'Debes seleccionar tu carrera.';
             $messages['id_carrera.exists']     = 'La carrera seleccionada no es válida.';
         }
@@ -96,6 +96,7 @@ class RegisterController extends Controller
     {
         $tipo = $data['tipo_registro'];
 
+        // num_control ya NO va en USUARIO
         $user = User::create([
             'nombre'           => $data['nombre'],
             'apellido_paterno' => $data['apellido_paterno'],
@@ -103,7 +104,6 @@ class RegisterController extends Controller
             'email'            => $data['email'],
             'contrasena'       => Hash::make($data['password']),
             'tipo_usuario'     => $tipo,
-            'num_control'      => $tipo === 'alumno' ? (int) preg_replace('/^\D+/', '', $data['num_control'] ?? '') : null,
             'telefono'         => $data['telefono'],
             'ultimo_acceso'    => now(),
         ]);
@@ -114,6 +114,7 @@ class RegisterController extends Controller
         if ($tipo === 'alumno') {
             Alumno::create([
                 'id_alumno'           => $user->id,
+                'num_control'         => $data['num_control'],   // varchar(9) en tabla alumno
                 'id_carrera'          => $data['id_carrera'],
                 'semestre_cursando'   => $this->calcularSemestre($data['num_control']),
                 'creditos_acumulados' => 0,
@@ -133,8 +134,8 @@ class RegisterController extends Controller
 
     private function calcularSemestre(string $numControl): int
     {
-        // Eliminar cualquier letra inicial (ej. "C22xxxxxx" → "22xxxxxx")
-        $digits = preg_replace('/^\D+/', '', $numControl);
+        // Tomar solo los primeros 2 dígitos como año de ingreso
+        $digits = preg_replace('/\D/', '', $numControl);
 
         $enrollmentYear = 2000 + (int) substr($digits, 0, 2);
 
@@ -142,15 +143,11 @@ class RegisterController extends Controller
         $year  = $now->year;
         $month = $now->month;
 
-        // Periodos académicos:
-        // Agosto–Enero: primer periodo del año académico
-        // Febrero–Julio: segundo periodo del año académico
         if ($month >= 8) {
             $halfYears = ($year - $enrollmentYear) * 2;
         } elseif ($month >= 2) {
             $halfYears = ($year - $enrollmentYear) * 2 - 1;
         } else {
-            // Enero: sigue siendo el primer periodo del año anterior
             $halfYears = ($year - 1 - $enrollmentYear) * 2;
         }
 

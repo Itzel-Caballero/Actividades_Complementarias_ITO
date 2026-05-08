@@ -43,11 +43,6 @@
                                 <input type="text" name="apellido_materno" class="form-control" value="{{ old('apellido_materno') }}">
                             </div>
 
-                            <div class="form-group" id="campo_num_control">
-                                <label>Número de Control</label>
-                                <input type="text" name="num_control" class="form-control" value="{{ old('num_control') }}">
-                            </div>
-
                             <div class="form-group">
                                 <label>Teléfono</label>
                                 <input type="text" name="telefono" class="form-control" value="{{ old('telefono') }}">
@@ -58,48 +53,58 @@
                                 <input type="email" name="email" class="form-control" value="{{ old('email') }}" required>
                             </div>
 
-<div class="form-group">
-    <label>Tipo de usuario <span class="text-danger">*</span></label>
-    <select name="tipo_usuario" id="tipo_usuario" class="form-control" required>
-        <option value="">-- Selecciona --</option>
-        <option value="alumno"      {{ old('tipo_usuario') == 'alumno'      ? 'selected' : '' }}>Alumno</option>
-        <option value="instructor"  {{ old('tipo_usuario') == 'instructor'  ? 'selected' : '' }}>Instructor</option>
-        <option value="coordinador" {{ old('tipo_usuario') == 'coordinador' ? 'selected' : '' }}>Coordinador</option>
-    </select>
-    <small class="form-text text-muted">
-        El rol se asignará automáticamente según el tipo seleccionado.
-    </small>
-</div>
+                            <div class="form-group">
+                                <label>Tipo de usuario <span class="text-danger">*</span></label>
+                                <select name="tipo_usuario" id="tipo_usuario" class="form-control" required>
+                                    <option value="">-- Selecciona --</option>
+                                    <option value="alumno"      {{ old('tipo_usuario') == 'alumno'      ? 'selected' : '' }}>Alumno</option>
+                                    <option value="instructor"  {{ old('tipo_usuario') == 'instructor'  ? 'selected' : '' }}>Instructor</option>
+                                    <option value="coordinador" {{ old('tipo_usuario') == 'coordinador' ? 'selected' : '' }}>Coordinador</option>
+                                </select>
+                                <small class="form-text text-muted">
+                                    El rol se asignará automáticamente según el tipo seleccionado.
+                                </small>
+                            </div>
 
-{{-- Campos extra para INSTRUCTOR --}}
-<div id="campos_instructor" style="display:none">
-    <hr>
-    <h6 class="text-primary"><i class="fa fa-chalkboard-teacher"></i> Datos del Instructor</h6>
-    <div class="form-group">
-        <label>Departamento <span class="text-danger">*</span></label>
-        <select name="id_departamento" class="form-control">
-            <option value="">-- Selecciona --</option>
-            @foreach ($departamentos as $dep)
-                <option value="{{ $dep->id_departamento }}"
-                    {{ old('id_departamento') == $dep->id_departamento ? 'selected' : '' }}>
-                    {{ $dep->nombre }}
-                </option>
-            @endforeach
-        </select>
-    </div>
-    <div class="form-group">
-        <label>Especialidad</label>
-        <input type="text" name="especialidad" class="form-control"
-               placeholder="Ej: Desarrollo Web, Cultura Física..."
-               value="{{ old('especialidad') }}">
-    </div>
-    <hr>
-</div>
+                            {{-- Campos extra para ALUMNO --}}
+                            <div id="campos_alumno" style="display:none">
+                                <hr>
+                                <h6 class="text-primary"><i class="fa fa-user-graduate"></i> Datos del Alumno</h6>
+                                <div class="form-group">
+                                    <label>Número de Control <span class="text-danger">*</span></label>
+                                    <input type="text" name="num_control" class="form-control"
+                                           maxlength="9"
+                                           placeholder="Ej: 21ITI001"
+                                           value="{{ old('num_control') }}">
+                                    <small class="form-text text-muted">Máximo 9 caracteres.</small>
+                                </div>
+                                <hr>
+                            </div>
 
-<div class="form-group">
-    <label>Contraseña</label>
-    <input type="password" name="password" class="form-control" required>
-</div>
+                            {{-- Campos extra para INSTRUCTOR --}}
+                            <div id="campos_instructor" style="display:none">
+                                <hr>
+                                <h6 class="text-primary"><i class="fa fa-chalkboard-teacher"></i> Datos del Instructor</h6>
+                                <div class="form-group">
+                                    <label>Departamento <span class="text-danger">*</span></label>
+                                    <select name="id_departamento" class="form-control">
+                                        <option value="">-- Selecciona --</option>
+                                        @foreach ($departamentos as $dep)
+                                            <option value="{{ $dep->id_departamento }}"
+                                                {{ old('id_departamento') == $dep->id_departamento ? 'selected' : '' }}>
+                                                {{ $dep->nombre }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Especialidad</label>
+                                    <input type="text" name="especialidad" class="form-control"
+                                           placeholder="Ej: Desarrollo Web, Cultura Física..."
+                                           value="{{ old('especialidad') }}">
+                                </div>
+                                <hr>
+                            </div>
 
                             <div class="form-group">
                                 <label>Contraseña</label>
@@ -118,7 +123,7 @@
                                     Este campo es automático y se sincroniza con el tipo de usuario.
                                 </small>
                             </div>
-                            
+
                             {{-- Campo oculto para enviar el rol automáticamente --}}
                             <input type="hidden" name="roles" id="roles_hidden" value="">
 
@@ -140,14 +145,12 @@
 
 @section('scripts')
 <script>
-    // Función para sincronizar tipo de usuario con rol
     function sincronizarRol() {
         const tipo = document.getElementById('tipo_usuario').value;
         let rol = '';
         let rolTexto = 'Seleccione un tipo de usuario';
-        
-        // Mapear tipo de usuario a rol
-        switch(tipo) {
+
+        switch (tipo) {
             case 'alumno':
                 rol = 'alumno';
                 rolTexto = 'Alumno';
@@ -164,24 +167,21 @@
                 rol = '';
                 rolTexto = 'Seleccione un tipo de usuario';
         }
-        
-        // Actualizar campo oculto y campo de visualización
+
         document.getElementById('roles_hidden').value = rol;
         document.getElementById('rol_asignado').value = rolTexto;
-        
-        // Mostrar/ocultar campos de instructor
+
+        // Mostrar/ocultar sección alumno
+        document.getElementById('campos_alumno').style.display =
+            tipo === 'alumno' ? 'block' : 'none';
+
+        // Mostrar/ocultar sección instructor
         document.getElementById('campos_instructor').style.display =
             tipo === 'instructor' ? 'block' : 'none';
     }
-    
-    // Configurar event listeners
-    document.addEventListener('DOMContentLoaded', function() {
-        const tipoSelect = document.getElementById('tipo_usuario');
-        
-        // Sincronizar al cambiar el tipo
-        tipoSelect.addEventListener('change', sincronizarRol);
-        
-        // Ejecutar al cargar para establecer el estado inicial
+
+    document.addEventListener('DOMContentLoaded', function () {
+        document.getElementById('tipo_usuario').addEventListener('change', sincronizarRol);
         sincronizarRol();
     });
 </script>

@@ -10,13 +10,18 @@ class ActividadComplementaria extends Model
 
     protected $fillable = [
         'nombre', 'descripcion', 'id_categoria',
-        'id_departamento', 'requisitos', 'nivel_actividad',
+        'id_departamento', 'id_semestre', 'requisitos', 'nivel_actividad',
         'disponible', 'creditos',
     ];
 
     public function departamento()
     {
         return $this->belongsTo(Departamento::class, 'id_departamento');
+    }
+
+    public function semestre()
+    {
+        return $this->belongsTo(Semestre::class, 'id_semestre');
     }
 
     public function grupos()

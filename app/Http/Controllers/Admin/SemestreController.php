@@ -157,6 +157,7 @@ class SemestreController extends Controller
     public function show($id)
     {
         $semestre = Semestre::with([
+            'actividades',
             'grupos.actividad',
             'grupos.instructor.usuario',
             'grupos.inscripciones.alumno.usuario',

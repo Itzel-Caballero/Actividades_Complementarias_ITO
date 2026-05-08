@@ -100,44 +100,25 @@
 
                             <div class="form-group">
                                 <label>No. de Control</label>
-                                <input type="text" class="form-control" value="{{ $user->num_control }}" disabled>
+                                <input type="text" class="form-control" value="{{ $alumno->num_control ?? 'N/A' }}" disabled readonly>
                                 <small class="text-muted">El número de control no se puede modificar.</small>
                             </div>
 
                             <div class="form-group">
-                                <label>Carrera <span class="text-danger">*</span></label>
-                                <select name="id_carrera" class="form-control @error('id_carrera') is-invalid @enderror" required>
-                                    <option value="">-- Selecciona --</option>
-                                    @foreach ($carreras as $carrera)
-                                        <option value="{{ $carrera->id_carrera }}"
-                                            {{ old('id_carrera', $alumno->id_carrera) == $carrera->id_carrera ? 'selected' : '' }}>
-                                            {{ $carrera->nombre }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                @error('id_carrera')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
+                                <label>Carrera</label>
+                                <input type="text" class="form-control" value="{{ $alumno->carrera->nombre ?? 'Sin asignar' }}" disabled readonly>
+                                <small class="text-muted">La carrera no se puede modificar desde aquí.</small>
                             </div>
 
                             <div class="form-group">
-                                <label>Semestre que cursas <span class="text-danger">*</span></label>
-                                <select name="semestre_cursando" class="form-control @error('semestre_cursando') is-invalid @enderror" required>
-                                    @for ($i = 1; $i <= 12; $i++)
-                                        <option value="{{ $i }}"
-                                            {{ old('semestre_cursando', $alumno->semestre_cursando) == $i ? 'selected' : '' }}>
-                                            {{ $i }}°
-                                        </option>
-                                    @endfor
-                                </select>
-                                @error('semestre_cursando')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
+                                <label>Semestre que cursas</label>
+                                <input type="text" class="form-control" value="{{ $alumno->semestre_cursando ?? '-' }}°" disabled readonly>
+                                <small class="text-muted">El semestre no se puede modificar desde aquí.</small>
                             </div>
 
                             <div class="form-group">
                                 <label>Créditos Acumulados</label>
-                                <input type="text" class="form-control" value="{{ $alumno->creditos_acumulados }}" disabled>
+                                <input type="text" class="form-control" value="{{ $alumno->creditos_acumulados ?? 0 }}" disabled readonly>
                                 <small class="text-muted">Los créditos se actualizan automáticamente al aprobar actividades.</small>
                             </div>
 

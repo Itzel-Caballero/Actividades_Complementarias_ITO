@@ -19,13 +19,15 @@ class UsuarioController extends Controller
         $buscar       = trim($request->get('buscar', ''));
         $tipo_usuario = trim($request->get('tipo_usuario', ''));
 
-        $usuarios = User::with('roles')
-            ->where(function($query) use ($buscar) {
+        $usuarios = User::with(['roles', 'alumno'])
+            ->where(function ($query) use ($buscar) {
                 if ($buscar) {
                     $query->where('nombre', 'LIKE', '%' . $buscar . '%')
                           ->orWhere('apellido_paterno', 'LIKE', '%' . $buscar . '%')
                           ->orWhere('email', 'LIKE', '%' . $buscar . '%')
-                          ->orWhere('num_control', 'LIKE', '%' . $buscar . '%');
+                          ->orWhereHas('alumno', function ($q) use ($buscar) {
+                              $q->where('num_control', 'LIKE', '%' . $buscar . '%');
+                          });
                 }
             })
             ->when($tipo_usuario, fn($q) =>
@@ -39,7 +41,7 @@ class UsuarioController extends Controller
 
     public function create()
     {
-        $roles        = Role::pluck('name', 'name')->all();
+        $roles         = Role::pluck('name', 'name')->all();
         $departamentos = Departamento::orderBy('nombre')->get();
         return view('usuarios.crear', compact('roles', 'departamentos'));
     }
@@ -54,9 +56,9 @@ class UsuarioController extends Controller
             'tipo_usuario'     => 'required|in:alumno,instructor,coordinador',
         ];
 
-        // num_control solo obligatorio para alumnos
+        // num_control solo obligatorio para alumnos (varchar 9)
         if ($request->tipo_usuario === 'alumno') {
-            $rules['num_control'] = 'required|numeric';
+            $rules['num_control'] = 'required|string|max:9|unique:alumno,num_control';
             $rules['id_carrera']  = 'required|exists:carrera,id_carrera';
         }
 
@@ -67,17 +69,15 @@ class UsuarioController extends Controller
 
         $this->validate($request, $rules);
 
-    $user = User::create([
-        'nombre'           => $request->nombre,
-        'apellido_paterno' => $request->apellido_paterno,
-        'apellido_materno' => $request->apellido_materno,
-        'email'            => $request->email,
-        'contrasena'       => Hash::make($request->password),
-        'tipo_usuario'     => $request->tipo_usuario,
-        'num_control'      => $request->num_control,
-        'telefono'         => $request->telefono,
-        'id_carrera'       => $request->id_carrera, // <-- Agregamos esta línea
-    ]);
+        $user = User::create([
+            'nombre'           => $request->nombre,
+            'apellido_paterno' => $request->apellido_paterno,
+            'apellido_materno' => $request->apellido_materno,
+            'email'            => $request->email,
+            'contrasena'       => Hash::make($request->password),
+            'tipo_usuario'     => $request->tipo_usuario,
+            'telefono'         => $request->telefono,
+        ]);
 
         // Insertar en tabla específica según tipo
         if ($request->tipo_usuario === 'instructor') {
@@ -91,6 +91,7 @@ class UsuarioController extends Controller
         if ($request->tipo_usuario === 'alumno') {
             Alumno::create([
                 'id_alumno'           => $user->id,
+                'num_control'         => $request->num_control,
                 'id_carrera'          => $request->id_carrera,
                 'semestre_cursando'   => $request->semestre_cursando ?? 1,
                 'creditos_acumulados' => 0,
@@ -98,15 +99,14 @@ class UsuarioController extends Controller
         }
 
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
-        
-        // Determinar rol automáticamente basado en tipo_usuario
+
         $rol = match($request->tipo_usuario) {
-            'alumno' => 'alumno',
-            'instructor' => 'instructor',
+            'alumno'      => 'alumno',
+            'instructor'  => 'instructor',
             'coordinador' => 'coordinador',
-            default => null
+            default       => null
         };
-        
+
         if ($rol) {
             try {
                 $user->assignRole($rol);
@@ -127,7 +127,8 @@ class UsuarioController extends Controller
         $userRole      = $user->roles->pluck('name', 'name')->all();
         $departamentos = Departamento::orderBy('nombre')->get();
         $instructor    = Instructor::where('id_instructor', $id)->first();
-        return view('usuarios.editar', compact('user', 'roles', 'userRole', 'departamentos', 'instructor'));
+        $alumno        = Alumno::where('id_alumno', $id)->first();
+        return view('usuarios.editar', compact('user', 'roles', 'userRole', 'departamentos', 'instructor', 'alumno'));
     }
 
     public function update(Request $request, $id)
@@ -139,6 +140,11 @@ class UsuarioController extends Controller
             'password'         => 'nullable|same:confirm-password',
             'tipo_usuario'     => 'required|in:alumno,instructor,coordinador',
         ];
+
+        // num_control solo para alumnos al editar
+        if ($request->tipo_usuario === 'alumno') {
+            $rules['num_control'] = 'required|string|max:9|unique:alumno,num_control,' . $id . ',id_alumno';
+        }
 
         // Validar departamento si es instructor
         if ($request->tipo_usuario === 'instructor') {
@@ -155,7 +161,6 @@ class UsuarioController extends Controller
             'apellido_materno' => $request->apellido_materno,
             'email'            => $request->email,
             'tipo_usuario'     => $request->tipo_usuario,
-            'num_control'      => $request->num_control,
             'telefono'         => $request->telefono,
         ];
 
@@ -176,7 +181,13 @@ class UsuarioController extends Controller
             );
         }
 
-        // Determinar rol automáticamente basado en tipo_usuario
+        // Actualizar num_control en tabla alumno si corresponde
+        if ($request->tipo_usuario === 'alumno') {
+            Alumno::where('id_alumno', $id)->update([
+                'num_control' => $request->num_control,
+            ]);
+        }
+
         $rol = match($request->tipo_usuario) {
             'alumno'      => 'alumno',
             'instructor'  => 'instructor',
@@ -194,20 +205,18 @@ class UsuarioController extends Controller
     }
 
     public function destroy($id)
-{
-    $usuario = User::find($id);
+    {
+        $usuario = User::find($id);
 
-    // 1. Borramos la relación primero (el registro en la tabla alumnos)
-    if ($usuario->alumno) {
-        $usuario->alumno()->delete();
+        if ($usuario->alumno) {
+            $usuario->alumno()->delete();
+        }
+
+        $usuario->delete();
+
+        return redirect()->route('usuarios.index')
+            ->with('success', 'El usuario ' . $usuario->nombre . ' ha sido dado de baja correctamente.');
     }
-
-    // 2. Ahora sí podemos borrar el usuario
-    $usuario->delete();
-
-    return redirect()->route('usuarios.index')
-        ->with('success', 'El alumno ' . $usuario->nombre . ' ha sido dado de baja correctamente.');
-}
 
     /**
      * Habilita o deshabilita un usuario (toggle activo).

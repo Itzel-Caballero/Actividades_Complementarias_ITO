@@ -60,13 +60,6 @@
                             </div>
 
                             <div class="row">
-                                <div class="col-md-6" id="campo_num_control" style="{{ old('tipo_usuario', $user->tipo_usuario) == 'alumno' ? '' : 'display:none' }}">
-                                    <div class="form-group">
-                                        <label>Número de Control</label>
-                                        <input type="text" name="num_control" class="form-control"
-                                               value="{{ old('num_control', $user->num_control) }}">
-                                    </div>
-                                </div>
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label>Teléfono</label>
@@ -108,7 +101,7 @@
                                 </div>
                             </div>
 
-                            {{-- ─── Tipo de Usuario (determina automáticamente el rol) ───────────────────────────────────── --}}
+                            {{-- ─── Tipo de Usuario ─────────────────────────────── --}}
                             <hr>
                             <h6 class="text-primary mb-3">
                                 <i class="fas fa-user-shield mr-1"></i> Tipo de Usuario
@@ -124,14 +117,33 @@
                                             <option value="instructor"  {{ old('tipo_usuario', $user->tipo_usuario) == 'instructor'  ? 'selected' : '' }}>Instructor</option>
                                             <option value="coordinador" {{ old('tipo_usuario', $user->tipo_usuario) == 'coordinador' ? 'selected' : '' }}>Coordinador</option>
                                         </select>
-                                        
                                     </div>
                                 </div>
-                                
                             </div>
-                            
-                            {{-- Campo oculto para enviar el rol automáticamente --}}
-                            <input type="hidden" name="roles" id="roles_hidden" value="{{ isset($userRole) && count($userRole) > 0 ? array_key_first($userRole) : '' }}">
+
+                            {{-- Campo oculto para el rol --}}
+                            <input type="hidden" name="roles" id="roles_hidden"
+                                   value="{{ isset($userRole) && count($userRole) > 0 ? array_key_first($userRole) : '' }}">
+
+                            {{-- ─── Datos del Alumno (solo si es alumno) ─────────── --}}
+                            <div id="campos_alumno" style="{{ old('tipo_usuario', $user->tipo_usuario) == 'alumno' ? '' : 'display:none' }}">
+                                <hr>
+                                <h6 class="text-info mb-3">
+                                    <i class="fas fa-user-graduate mr-1"></i> Datos del Alumno
+                                </h6>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Número de Control <span class="text-danger">*</span></label>
+                                            <input type="text" name="num_control" class="form-control"
+                                                   maxlength="9"
+                                                   placeholder="Ej: 21ITI001"
+                                                   value="{{ old('num_control', $alumno->num_control ?? '') }}">
+                                            <small class="form-text text-muted">Máximo 9 caracteres.</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
 
                             {{-- ─── Datos de Instructor (si aplica) ─────────────── --}}
                             <div id="campos_instructor" style="{{ old('tipo_usuario', $user->tipo_usuario) == 'instructor' ? '' : 'display:none' }}">
@@ -188,46 +200,30 @@
 
 @section('scripts')
 <script>
-    // Función para sincronizar tipo de usuario con rol
     function sincronizarRol() {
         const tipo = document.getElementById('tipo_usuario').value;
         let rol = '';
-        
-        // Mapear tipo de usuario a rol
-        switch(tipo) {
-            case 'alumno':
-                rol = 'alumno';
-                break;
-            case 'instructor':
-                rol = 'instructor';
-                break;
-            case 'coordinador':
-                rol = 'coordinador';
-                break;
-            default:
-                rol = '';
+
+        switch (tipo) {
+            case 'alumno':      rol = 'alumno';      break;
+            case 'instructor':  rol = 'instructor';  break;
+            case 'coordinador': rol = 'coordinador'; break;
+            default:            rol = '';
         }
-        
-        // Actualizar campo oculto
+
         document.getElementById('roles_hidden').value = rol;
-        
+
+        // Mostrar/ocultar campos de alumno
+        document.getElementById('campos_alumno').style.display =
+            tipo === 'alumno' ? '' : 'none';
+
         // Mostrar/ocultar campos de instructor
         document.getElementById('campos_instructor').style.display =
             tipo === 'instructor' ? 'block' : 'none';
-        
-        // Mostrar/ocultar campo de número de control (solo para alumnos)
-        document.getElementById('campo_num_control').style.display =
-            tipo === 'alumno' ? '' : 'none';
     }
-    
-    // Configurar event listeners
-    document.addEventListener('DOMContentLoaded', function() {
-        const tipoSelect = document.getElementById('tipo_usuario');
-        
-        // Sincronizar al cambiar el tipo
-        tipoSelect.addEventListener('change', sincronizarRol);
-        
-        // Ejecutar al cargar para establecer el estado inicial
+
+    document.addEventListener('DOMContentLoaded', function () {
+        document.getElementById('tipo_usuario').addEventListener('change', sincronizarRol);
         sincronizarRol();
     });
 </script>

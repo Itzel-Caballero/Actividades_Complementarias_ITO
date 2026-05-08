@@ -9,6 +9,18 @@
     </div>
     <div class="section-body">
 
+        @php $semestreActivo = \App\Models\Semestre::where('status', 'activo')->exists(); @endphp
+
+        @if (!$semestreActivo)
+            <div class="alert alert-warning d-flex align-items-center mb-4">
+                <i class="fas fa-exclamation-triangle fa-2x mr-3"></i>
+                <div>
+                    <strong>No hay un semestre activo en este momento.</strong><br>
+                    <span>No puedes inscribirte en nuevas actividades hasta que se active un nuevo período. Puedes consultar tu perfil e historial de inscripciones anteriores.</span>
+                </div>
+            </div>
+        @endif
+
         {{-- ── Tarjetas de info del alumno ────────────────────── --}}
         <div class="row mb-4">
 
@@ -49,7 +61,7 @@
                             <i class="fas fa-id-card"></i> No. Control
                         </h6>
                         <h2 class="text-white mb-2">
-                            {{ auth()->user()->num_control ?? 'N/A' }}
+                            {{ $alumno->num_control ?? 'N/A' }}
                         </h2>
                         <p class="m-b-0 text-white small mb-0">número de control</p>
                     </div>
@@ -114,9 +126,11 @@
                             <div class="text-center py-3">
                                 <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
                                 <p class="text-muted">No estás inscrito en ninguna actividad complementaria.</p>
+                                @if ($semestreActivo)
                                 <a href="{{ route('actividades.index') }}" class="btn btn-primary">
                                     <i class="fas fa-search"></i> Ver catálogo de actividades
                                 </a>
+                                @endif
                             </div>
                         @endif
                     </div>
@@ -131,6 +145,7 @@
                     </div>
                     <div class="card-body p-0">
                         <div class="list-group list-group-flush">
+                            @if ($semestreActivo)
                             <a href="{{ route('actividades.index') }}"
                                class="list-group-item list-group-item-action d-flex align-items-center">
                                 <i class="fas fa-th-list fa-lg text-primary mr-3"></i>
@@ -139,6 +154,7 @@
                                     <p class="mb-0 small text-muted">Explora todas las actividades disponibles</p>
                                 </div>
                             </a>
+                            @endif
                             <a href="{{ route('inscripciones.index') }}"
                                class="list-group-item list-group-item-action d-flex align-items-center">
                                 <i class="fas fa-clipboard-list fa-lg text-success mr-3"></i>

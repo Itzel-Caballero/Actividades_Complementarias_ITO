@@ -27,6 +27,11 @@ class Semestre extends Model
         return $this->hasMany(Grupo::class, 'id_semestre');
     }
 
+    public function actividades()
+    {
+        return $this->hasMany(ActividadComplementaria::class, 'id_semestre');
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────
 
     /** Etiqueta legible: "Enero–Junio 2026" */

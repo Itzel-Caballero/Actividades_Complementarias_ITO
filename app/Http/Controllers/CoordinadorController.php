@@ -113,10 +113,11 @@ class CoordinadorController extends Controller
                 ->with('error', 'No hay un periodo escolar activo. No es posible crear grupos en este momento.');
         }
 
-        // Solo actividades del departamento del coordinador
+        // Solo actividades del departamento del coordinador Y del semestre activo
         $actividades   = ActividadComplementaria::with(['departamento', 'carreras'])
                             ->where('disponible', true)
                             ->where('id_departamento', $idDepto)
+                            ->where('id_semestre', $semestreActivo->id_semestre)
                             ->orderBy('nombre')->get();
         // Solo instructores del departamento del coordinador
         $instructores  = Instructor::with(['usuario', 'departamento'])
@@ -368,9 +369,16 @@ class CoordinadorController extends Controller
     {
         $idDepto = $this->getDepartamentoCoordinador();
 
-        // Solo actividades del propio departamento
+        // Obtener el semestre activo para filtrar actividades
+        $semestreActivo = Semestre::where('status', 'activo')->first();
+
+        // Solo actividades del propio departamento y del semestre activo
         $query = ActividadComplementaria::with(['departamento', 'grupos', 'carreras'])
                     ->where('id_departamento', $idDepto);
+
+        if ($semestreActivo) {
+            $query->where('id_semestre', $semestreActivo->id_semestre);
+        }
 
         if ($request->filled('buscar'))
             $query->where('nombre', 'like', '%'.$request->buscar.'%');
@@ -428,11 +436,12 @@ class CoordinadorController extends Controller
 
         if ($request->filled('buscar')) {
             $b = $request->buscar;
-            $query->whereHas('usuario', fn($q) =>
-                $q->where('nombre', 'like', "%{$b}%")
-                  ->orWhere('apellido_paterno', 'like', "%{$b}%")
-                  ->orWhere('num_control', 'like', "%{$b}%")
-            );
+            $query->where(function($q) use ($b) {
+                $q->whereHas('usuario', fn($sub) =>
+                    $sub->where('nombre', 'like', "%{$b}%")
+                         ->orWhere('apellido_paterno', 'like', "%{$b}%")
+                )->orWhere('num_control', 'like', "%{$b}%");
+            });
         }
         if ($request->filled('id_carrera'))
             $query->where('id_carrera', $request->id_carrera);
@@ -454,24 +463,37 @@ class CoordinadorController extends Controller
     // ─── DAR DE BAJA a alumno ─────────────────────────────────────────────
     public function darBajaAlumno(Request $request, $id_inscripcion)
     {
-        $idDepto     = $this->getDepartamentoCoordinador();
-        $inscripcion = Inscripcion::with(['grupo.actividad', 'alumno'])->findOrFail($id_inscripcion);
+        try {
+            $idDepto     = $this->getDepartamentoCoordinador();
+            $inscripcion = Inscripcion::with(['grupo.actividad', 'alumno.usuario'])->findOrFail($id_inscripcion);
 
-        // Verificar que la inscripción corresponde a una actividad del departamento
-        if ($inscripcion->grupo->actividad->id_departamento !== $idDepto)
-            abort(403, 'No puedes dar de baja alumnos de otros departamentos.');
+            // Verificar que la inscripción corresponde a una actividad del departamento
+            if ($inscripcion->grupo->actividad->id_departamento !== $idDepto)
+                abort(403, 'No puedes dar de baja alumnos de otros departamentos.');
 
-        // Actualizar cupo del grupo
-        $grupo = $inscripcion->grupo;
-        if ($grupo && $grupo->cupo_ocupado > 0) {
-            $grupo->decrement('cupo_ocupado');
+            // Verificar que la inscripción esté activa
+            if (!in_array($inscripcion->estatus, ['inscrito', 'cursando'])) {
+                return redirect()->route('coordinador.alumnos')
+                    ->with('error', 'La inscripción ya no está activa (estatus actual: ' . $inscripcion->estatus . ').');
+            }
+
+            // Actualizar cupo del grupo
+            $grupo = $inscripcion->grupo;
+            if ($grupo && $grupo->cupo_ocupado > 0) {
+                $grupo->decrement('cupo_ocupado');
+            }
+
+            // Dar de baja (no eliminamos, cambiamos estatus para preservar historial)
+            // El valor 'dado_de_baja' debe coincidir con el ENUM de la BD
+            $inscripcion->estatus = 'dado_de_baja';
+            $inscripcion->save();
+
+            return redirect()->route('coordinador.alumnos')
+                ->with('success', 'Alumno ' . ($inscripcion->alumno->usuario->nombre_completo ?? '') . ' dado de baja correctamente de la actividad ' . ($inscripcion->grupo->actividad->nombre ?? '') . '.');
+        } catch (\Exception $e) {
+            return redirect()->route('coordinador.alumnos')
+                ->with('error', 'Error al dar de baja: ' . $e->getMessage());
         }
-
-        // Dar de baja (no eliminamos, cambiamos estatus para preservar historial)
-        $inscripcion->update(['estatus' => 'baja']);
-
-        return redirect()->route('coordinador.alumnos', $request->query())
-            ->with('success', 'Alumno dado de baja correctamente.');
     }
 
     // ─── AJAX: instructores por departamento de actividad ─────────────────
