@@ -62,23 +62,22 @@ class RegisterController extends Controller
         ];
 
         if ($tipo === 'alumno') {
-            $rules['id_carrera']      = ['required', 'exists:carrera,id_carrera'];
-            $rules['semestre_actual'] = ['required', 'integer', 'min:1', 'max:12'];
-            $rules['num_control']     = [
+            $rules['id_carrera']  = ['required', 'exists:carrera,id_carrera'];
+            $rules['num_control'] = [
                 'required',
-                // 8 dígitos numéricos  O  C + 8 dígitos
                 'regex:/^(\d{8}|C\d{8})$/',
-                // Unicidad ignorando mayúsculas/minúsculas no aplica aquí
-                // pero sí verificamos que no exista ya en la BD
-                Rule::unique('USUARIO', 'num_control'),
+                function ($attribute, $value, $fail) {
+                    $numeric = (int) preg_replace('/^\D+/', '', $value);
+                    if (User::where('num_control', $numeric)->exists()) {
+                        $fail('Este número de control ya está registrado en el sistema.');
+                    }
+                },
             ];
 
             $messages['num_control.required'] = 'El número de control es obligatorio.';
             $messages['num_control.regex']     = 'El número de control debe ser de 8 dígitos numéricos (Ej: 20310001) o iniciar con "C" seguido de 8 dígitos (Ej: C20310001).';
-            $messages['num_control.unique']    = 'Este número de control ya está registrado en el sistema.';
             $messages['id_carrera.required']   = 'Debes seleccionar tu carrera.';
             $messages['id_carrera.exists']     = 'La carrera seleccionada no es válida.';
-            $messages['semestre_actual.required'] = 'Debes seleccionar el semestre que cursas.';
         }
 
         if ($tipo === 'instructor') {
@@ -104,7 +103,7 @@ class RegisterController extends Controller
             'email'            => $data['email'],
             'contrasena'       => Hash::make($data['password']),
             'tipo_usuario'     => $tipo,
-            'num_control'      => $tipo === 'alumno' ? ($data['num_control'] ?? null) : null,
+            'num_control'      => $tipo === 'alumno' ? (int) preg_replace('/^\D+/', '', $data['num_control'] ?? '') : null,
             'telefono'         => $data['telefono'],
             'ultimo_acceso'    => now(),
         ]);
@@ -116,7 +115,7 @@ class RegisterController extends Controller
             Alumno::create([
                 'id_alumno'           => $user->id,
                 'id_carrera'          => $data['id_carrera'],
-                'semestre_cursando'   => $data['semestre_actual'],
+                'semestre_cursando'   => $this->calcularSemestre($data['num_control']),
                 'creditos_acumulados' => 0,
             ]);
         }
@@ -130,5 +129,31 @@ class RegisterController extends Controller
         }
 
         return $user;
+    }
+
+    private function calcularSemestre(string $numControl): int
+    {
+        // Eliminar cualquier letra inicial (ej. "C22xxxxxx" → "22xxxxxx")
+        $digits = preg_replace('/^\D+/', '', $numControl);
+
+        $enrollmentYear = 2000 + (int) substr($digits, 0, 2);
+
+        $now   = now();
+        $year  = $now->year;
+        $month = $now->month;
+
+        // Periodos académicos:
+        // Agosto–Enero: primer periodo del año académico
+        // Febrero–Julio: segundo periodo del año académico
+        if ($month >= 8) {
+            $halfYears = ($year - $enrollmentYear) * 2;
+        } elseif ($month >= 2) {
+            $halfYears = ($year - $enrollmentYear) * 2 - 1;
+        } else {
+            // Enero: sigue siendo el primer periodo del año anterior
+            $halfYears = ($year - 1 - $enrollmentYear) * 2;
+        }
+
+        return max(1, min(12, $halfYears + 1));
     }
 }

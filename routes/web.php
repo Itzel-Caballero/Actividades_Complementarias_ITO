@@ -18,6 +18,7 @@ use App\Http\Controllers\Admin\UbicacionController;
 use App\Http\Controllers\Admin\ReporteController;
 use App\Http\Controllers\PanelCoordinadoresController;
 use App\Http\Controllers\AlumnoController;
+use App\Http\Controllers\ConstanciaController;
 
 Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
     Route::get('alumnos/crear', [AlumnoController::class, 'create'])->name('alumnos.create');
@@ -77,6 +78,7 @@ Route::middleware(['auth', 'usuario.activo'])->group(function () {
     Route::post('/inscripciones', [InscripcionController::class, 'store'])->name('inscripciones.store');
     Route::get('/mis-inscripciones', [InscripcionController::class, 'index'])->name('inscripciones.index');
     Route::post('/inscripciones/{inscripcion}/baja', [InscripcionController::class, 'darBaja'])->name('inscripciones.baja');
+    Route::get('/constancia/{id_inscripcion}', [ConstanciaController::class, 'descargar'])->name('constancia.descargar');
 
     // ─── Coordinador ──────────────────────────────────────────────────────
     Route::prefix('coordinador')->name('coordinador.')->group(function () {

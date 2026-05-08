@@ -317,19 +317,6 @@
                             </div>
                         </div>
 
-                        {{-- Semestre --}}
-                        <div class="form-group mb-2">
-                            <label>Semestre que cursas <span class="req">*</span></label>
-                            <select name="semestre_actual" class="form-control" id="selectSemestre">
-                                <option value="">— Selecciona tu semestre —</option>
-                                @for($s = 1; $s <= 12; $s++)
-                                    <option value="{{ $s }}" {{ old('semestre_actual') == $s ? 'selected' : '' }}>
-                                        {{ $s }}° Semestre
-                                    </option>
-                                @endfor
-                            </select>
-                        </div>
-
                         {{-- Número de control --}}
                         <div class="form-group mb-2">
                             <label>Número de control <span class="req">*</span></label>

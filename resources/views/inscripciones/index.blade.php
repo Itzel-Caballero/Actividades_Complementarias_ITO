@@ -161,6 +161,7 @@
                                 <th>Estatus</th>
                                 <th>Desempeño</th>
                                 <th>Observaciones</th>
+                                <th>Constancia</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -201,6 +202,16 @@
                                     </td>
                                     <td>
                                         {{ $calificacion->observaciones ?? '—' }}
+                                    </td>
+                                    <td>
+                                        @if($item->estatus === 'aprobado')
+                                            <a href="{{ route('constancia.descargar', $item->id_inscripcion) }}"
+                                               class="btn btn-sm btn-outline-primary" target="_blank" title="Descargar constancia">
+                                                <i class="fas fa-file-pdf"></i> Descargar
+                                            </a>
+                                        @else
+                                            <span class="text-muted">—</span>
+                                        @endif
                                     </td>
                                 </tr>
                             @endforeach
