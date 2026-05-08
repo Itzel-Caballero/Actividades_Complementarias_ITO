@@ -129,6 +129,11 @@
         <i class="fas fa-chalkboard-teacher"></i><span>Mis Grupos</span>
     </a>
 </li>
+<li class="{{ Request::is('instructor/perfil*') ? 'active' : '' }}">
+    <a class="nav-link" href="{{ route('instructor.perfil') }}">
+        <i class="fas fa-user-edit"></i><span>Mi Perfil</span>
+    </a>
+</li>
 @endrole
 
 {{-- ═══════════════════════════════════════════════════════════════ --}}

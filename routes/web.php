@@ -58,6 +58,8 @@ Route::middleware(['auth', 'usuario.activo'])->group(function () {
         Route::put('/perfil',       [InstructorController::class, 'actualizarPerfil'])->name('perfil.update');
         Route::get('/calificar/{id_inscripcion}',  [InstructorController::class, 'calificar'])->name('calificar');
         Route::put('/calificar/{id_inscripcion}',  [InstructorController::class, 'guardarCalificacion'])->name('guardarCalificacion');
+        Route::get('/grupos/{id_grupo}/descargar-lista', [InstructorController::class, 'descargarLista'])->name('descargar-lista');
+        Route::get('/grupos/{id_grupo}/lista-asistencia-pdf', [InstructorController::class, 'listaAsistenciaPDF'])->name('lista-asistencia-pdf');
     });
 
     // ─── Recursos generales ───────────────────────────────────────────────

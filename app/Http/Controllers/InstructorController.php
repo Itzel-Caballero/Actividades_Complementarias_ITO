@@ -8,6 +8,7 @@ use App\Models\Inscripcion;
 use App\Models\Calificacion;
 use App\Models\Semestre;
 use App\Models\Alumno;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class InstructorController extends Controller
 {
@@ -147,6 +148,138 @@ class InstructorController extends Controller
             ->with('success', 'Calificación guardada correctamente.');
     }
 
+    // ── Descargar lista de alumnos de un grupo ──────────────────────────────
+
+    public function descargarLista($id_grupo)
+    {
+        $instructor = $this->getInstructor();
+
+        // Verificar que el grupo pertenece al instructor
+        $grupo = $instructor->grupos()
+            ->with([
+                'actividad',
+                'semestre',
+                'inscripciones.alumno.usuario',
+                'inscripciones.alumno.carrera',
+                'inscripciones.calificaciones',
+            ])
+            ->where('id_grupo', $id_grupo)
+            ->firstOrFail();
+
+        abort_unless(
+            $instructor->grupos->contains('id_grupo', $grupo->id_grupo),
+            403,
+            'No tienes permiso para descargar esta lista.'
+        );
+
+        $actividad  = $grupo->actividad->nombre  ?? 'Grupo';
+        $grupoNum   = $grupo->grupo;
+        $semestre   = ($grupo->semestre->año ?? '') . '-' . ($grupo->semestre->periodo ?? '');
+        $nombreArchivo = 'Lista_' . str_replace(' ', '_', $actividad) . '_Grupo' . $grupoNum . '_' . $semestre . '.csv';
+
+        $headers = [
+            'Content-Type'        => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="' . $nombreArchivo . '"',
+        ];
+
+        $callback = function () use ($grupo, $actividad, $grupoNum, $semestre) {
+            $handle = fopen('php://output', 'w');
+
+            // BOM para que Excel abra bien UTF-8
+            fprintf($handle, chr(0xEF) . chr(0xBB) . chr(0xBF));
+
+            // Encabezado informativo
+            fputcsv($handle, ['Actividad Complementaria:', $actividad]);
+            fputcsv($handle, ['Grupo:', $grupoNum]);
+            fputcsv($handle, ['Semestre:', $semestre]);
+            fputcsv($handle, ['Instructor:', auth()->user()->nombre . ' ' . auth()->user()->apellido_paterno]);
+            fputcsv($handle, ['Fecha de descarga:', now()->format('d/m/Y H:i')]);
+            fputcsv($handle, []);
+
+            // Cabecera de columnas
+            fputcsv($handle, [
+                '#',
+                'Nombre',
+                'Apellido Paterno',
+                'Apellido Materno',
+                'No. Control',
+                'Carrera',
+                'Semestre que cursa',
+                'Fecha Inscripción',
+                'Estatus Inscripción',
+                'Calificación',
+                'Observaciones',
+            ]);
+
+            $idx = 1;
+            foreach ($grupo->inscripciones as $inscripcion) {
+                $alumno      = $inscripcion->alumno;
+                $usuario     = $alumno->usuario ?? null;
+                $calificacion = $inscripcion->calificaciones->first();
+
+                fputcsv($handle, [
+                    $idx++,
+                    $usuario->nombre           ?? '',
+                    $usuario->apellido_paterno  ?? '',
+                    $usuario->apellido_materno  ?? '',
+                    $usuario->num_control       ?? '',
+                    $alumno->carrera->nombre    ?? '',
+                    $alumno->semestre_cursando  ?? '',
+                    \Carbon\Carbon::parse($inscripcion->fecha_inscripcion)->format('d/m/Y'),
+                    ucfirst($inscripcion->estatus ?? ''),
+                    $calificacion ? ucfirst($calificacion->desempenio) : 'Sin calificar',
+                    $calificacion->observaciones ?? '',
+                ]);
+            }
+
+            fclose($handle);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    // ── Descargar lista de asistencia en PDF ────────────────────────────────
+
+    public function listaAsistenciaPDF($id_grupo)
+    {
+        $instructor = $this->getInstructor();
+
+        $grupo = $instructor->grupos()
+            ->with([
+                'actividad',
+                'semestre',
+                'ubicacion',
+                'horarios.dia',
+                'inscripciones.alumno.usuario',
+                'inscripciones.alumno.carrera',
+            ])
+            ->where('id_grupo', $id_grupo)
+            ->firstOrFail();
+
+        abort_unless(
+            $instructor->grupos->contains('id_grupo', $grupo->id_grupo),
+            403,
+            'No tienes permiso para descargar esta lista.'
+        );
+
+        $instructorUser = auth()->user();
+
+        $pdf = Pdf::loadView('instructor.lista-asistencia-pdf', compact('grupo', 'instructorUser'))
+            ->setPaper('letter', 'portrait')
+            ->setOptions([
+                'defaultFont'     => 'DejaVu Sans',
+                'isHtml5ParserEnabled' => true,
+                'isRemoteEnabled' => true,
+            ]);
+
+        $actividad     = $grupo->actividad->nombre ?? 'Grupo';
+        $grupoNum      = $grupo->grupo;
+        $semestre      = ($grupo->semestre->año ?? '') . '-' . ($grupo->semestre->periodo ?? '');
+        $nombreArchivo = 'Asistencia_' . str_replace(' ', '_', $actividad) . '_Grupo' . $grupoNum . '_' . $semestre . '.pdf';
+
+        return $pdf->download($nombreArchivo);
+    }
+
     // ── Editar perfil del instructor ──────────────────────────────────────────
 
     public function editarPerfil()
@@ -167,6 +300,7 @@ class InstructorController extends Controller
             'apellido_materno' => ['nullable', 'string', 'min:2', 'max:50', 'regex:/^[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s]+$/u'],
             'telefono'         => ['nullable', 'regex:/^[0-9]{10}$/'],
             'especialidad'     => ['nullable', 'string', 'min:3', 'max:100', 'regex:/^[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ0-9\s\-\.]+$/u'],
+            'password'         => ['nullable', 'string', 'min:8', 'confirmed'],
         ], [
             'nombre.required'           => 'El nombre es obligatorio.',
             'nombre.min'                => 'El nombre debe tener al menos 2 caracteres.',
@@ -183,20 +317,28 @@ class InstructorController extends Controller
             'especialidad.min'          => 'La especialidad debe tener al menos 3 caracteres.',
             'especialidad.max'          => 'La especialidad no puede exceder 100 caracteres.',
             'especialidad.regex'        => 'La especialidad contiene caracteres no permitidos.',
+            'password.min'              => 'La contraseña debe tener al menos 8 caracteres.',
+            'password.confirmed'        => 'Las contraseñas no coinciden.',
         ]);
 
-        $user->update([
+        $datosUsuario = [
             'nombre'           => $request->nombre,
             'apellido_paterno' => $request->apellido_paterno,
             'apellido_materno' => $request->apellido_materno,
             'telefono'         => $request->telefono,
-        ]);
+        ];
+
+        if ($request->filled('password')) {
+            $datosUsuario['password'] = bcrypt($request->password);
+        }
+
+        $user->update($datosUsuario);
 
         $instructor->update([
             'especialidad' => $request->especialidad,
         ]);
 
-        return redirect()->route('home')
+        return redirect()->route('instructor.perfil')
             ->with('success', 'Perfil actualizado correctamente.');
     }
 }

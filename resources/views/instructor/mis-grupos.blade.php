@@ -283,11 +283,23 @@
                         &nbsp;·&nbsp;
                         <i class="fas fa-exclamation-circle text-warning mr-1"></i>{{ $pendientes }} pendientes
                     </small>
-                    <small class="text-muted">
-                        {{ $grupo->actividad->creditos ?? '—' }} crédito(s)
-                        &nbsp;·&nbsp;
-                        {{ $grupo->actividad->nivel_actividad ?? '' }}
-                    </small>
+                    <div class="d-flex align-items-center">
+                        <small class="text-muted mr-3">
+                            {{ $grupo->actividad->creditos ?? '—' }} crédito(s)
+                            &nbsp;·&nbsp;
+                            {{ $grupo->actividad->nivel_actividad ?? '' }}
+                        </small>
+                        <a href="{{ route('instructor.descargar-lista', $grupo->id_grupo) }}"
+                           class="btn btn-sm btn-outline-success"
+                           title="Descargar lista de alumnos en CSV">
+                            <i class="fas fa-file-download mr-1"></i>Descargar lista
+                        </a>
+                        <a href="{{ route('instructor.lista-asistencia-pdf', $grupo->id_grupo) }}"
+                           class="btn btn-sm btn-outline-danger ml-1"
+                           title="Descargar lista de asistencia en PDF">
+                            <i class="fas fa-file-pdf mr-1"></i>Lista de asistencia
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>

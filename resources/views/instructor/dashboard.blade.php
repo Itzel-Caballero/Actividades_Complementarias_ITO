@@ -61,13 +61,10 @@
                                         {{ $instructor->departamento->nombre ?? 'Sin departamento' }}
                                     </span>
                                 </p>
-                                <p class="mb-2 text-muted small">
+                                <p class="mb-0 text-muted small">
                                     <i class="fas fa-star text-warning mr-1"></i>
                                     {{ $instructor->especialidad ?? 'Sin especialidad' }}
                                 </p>
-                                <a href="{{ route('instructor.perfil') }}" class="btn btn-sm btn-outline-primary">
-                                    <i class="fas fa-user-edit mr-1"></i> Editar perfil
-                                </a>
                             </div>
                         </div>
                     </div>
