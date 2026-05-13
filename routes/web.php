@@ -53,7 +53,8 @@ Route::middleware(['auth', 'usuario.activo'])->group(function () {
 
     // ─── Instructor ───────────────────────────────────────────────────────
     Route::prefix('instructor')->name('instructor.')->group(function () {
-        Route::get('/mis-grupos',   [InstructorController::class, 'misGrupos'])->name('mis-grupos');
+        Route::get('/mis-grupos',            [InstructorController::class, 'misGrupos'])->name('mis-grupos');
+        Route::get('/grupos/{id_grupo}',       [InstructorController::class, 'verGrupo'])->name('ver-grupo');
         Route::get('/perfil',       [InstructorController::class, 'editarPerfil'])->name('perfil');
         Route::put('/perfil',       [InstructorController::class, 'actualizarPerfil'])->name('perfil.update');
         Route::get('/calificar/{id_inscripcion}',  [InstructorController::class, 'calificar'])->name('calificar');

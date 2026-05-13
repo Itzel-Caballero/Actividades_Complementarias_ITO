@@ -60,6 +60,35 @@ class InstructorController extends Controller
         return view('instructor.mis-grupos', compact('grupos', 'instructor', 'semestreActivo'));
     }
 
+    // ── Detalle de un grupo (vista dedicada) ──────────────────────────────────
+
+    public function verGrupo($id_grupo)
+    {
+        $instructor     = $this->getInstructor();
+        $semestreActivo = $this->getSemestreActivo();
+
+        $grupo = $instructor->grupos()
+            ->with([
+                'actividad',
+                'semestre',
+                'ubicacion',
+                'horarios.dia',
+                'inscripciones.alumno.usuario',
+                'inscripciones.alumno.carrera',
+                'inscripciones.calificaciones',
+            ])
+            ->where('id_grupo', $id_grupo)
+            ->firstOrFail();
+
+        abort_unless(
+            $instructor->grupos->contains('id_grupo', $grupo->id_grupo),
+            403,
+            'No tienes permiso para ver este grupo.'
+        );
+
+        return view('instructor.grupo-detalle', compact('grupo', 'instructor', 'semestreActivo'));
+    }
+
     // ── Calificar ─────────────────────────────────────────────────────────────
 
     public function calificar($id_inscripcion)
