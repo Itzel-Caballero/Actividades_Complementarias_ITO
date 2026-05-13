@@ -42,15 +42,25 @@
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label>Departamento <span class="text-danger">*</span></label>
-                                        <select name="id_departamento" class="form-control" required>
-                                            <option value="">-- Selecciona --</option>
-                                            @foreach ($departamentos as $dep)
-                                                <option value="{{ $dep->id_departamento }}"
-                                                    {{ old('id_departamento') == $dep->id_departamento ? 'selected' : '' }}>
-                                                    {{ $dep->nombre }}
-                                                </option>
-                                            @endforeach
-                                        </select>
+                                        @if($departamentoFijo)
+                                            {{-- Coordinador: departamento fijo, no editable --}}
+                                            <input type="hidden" name="id_departamento" value="{{ $departamentoFijo->id_departamento }}">
+                                            <div class="form-control bg-light text-muted" style="cursor:not-allowed;">
+                                                <i class="fas fa-building mr-1"></i>{{ $departamentoFijo->nombre }}
+                                            </div>
+                                            <small class="text-muted">Asignado automáticamente según tu departamento.</small>
+                                        @else
+                                            {{-- Admin: puede seleccionar cualquier departamento --}}
+                                            <select name="id_departamento" class="form-control" required>
+                                                <option value="">-- Selecciona --</option>
+                                                @foreach ($departamentos as $dep)
+                                                    <option value="{{ $dep->id_departamento }}"
+                                                        {{ old('id_departamento') == $dep->id_departamento ? 'selected' : '' }}>
+                                                        {{ $dep->nombre }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        @endif
                                     </div>
                                 </div>
                                 <div class="col-md-6">

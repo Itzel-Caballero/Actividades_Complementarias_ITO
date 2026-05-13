@@ -75,15 +75,34 @@ class ActividadComplementariaController extends Controller
     {
         $user = auth()->user();
         if (!$user->hasRole('admin') && !$user->hasRole('coordinador')) abort(403);
-        $departamentos = Departamento::all();
-        $carreras      = Carrera::all();
-        return view('actividades.create', compact('departamentos', 'carreras'));
+
+        $carreras = Carrera::all();
+
+        // Si es coordinador, obtenemos su departamento automáticamente
+        if ($user->hasRole('coordinador')) {
+            $asignacion = \App\Models\CoordinadorDepartamento::where('id_usuario', $user->id)->first();
+            if (!$asignacion) abort(403, 'No tienes un departamento asignado.');
+            $departamentoFijo = Departamento::findOrFail($asignacion->id_departamento);
+            $departamentos    = collect([$departamentoFijo]);
+        } else {
+            $departamentoFijo = null;
+            $departamentos    = Departamento::all();
+        }
+
+        return view('actividades.create', compact('departamentos', 'carreras', 'departamentoFijo'));
     }
 
     public function store(Request $request)
     {
         $user = auth()->user();
         if (!$user->hasRole('admin') && !$user->hasRole('coordinador')) abort(403);
+
+        // Si es coordinador, el departamento se fuerza desde su asignación (nunca del formulario)
+        if ($user->hasRole('coordinador')) {
+            $asignacion = \App\Models\CoordinadorDepartamento::where('id_usuario', $user->id)->first();
+            if (!$asignacion) abort(403, 'No tienes un departamento asignado.');
+            $request->merge(['id_departamento' => $asignacion->id_departamento]);
+        }
 
         $request->validate([
             'nombre'          => 'required|string|max:150',
