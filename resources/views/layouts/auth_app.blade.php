@@ -383,14 +383,14 @@
                     <div class="row">
                         <div class="col-6 pr-1">
                             <div class="form-group mb-2">
-                                <label>Ap. Paterno <span class="req">*</span></label>
+                                <label>Apellido Paterno <span class="req">*</span></label>
                                 <input type="text" name="apellido_paterno" class="form-control"
                                        placeholder="García" value="{{ old('apellido_paterno') }}" required>
                             </div>
                         </div>
                         <div class="col-6 pl-1">
                             <div class="form-group mb-2">
-                                <label>Ap. Materno</label>
+                                <label>Apellido Materno</label>
                                 <input type="text" name="apellido_materno" class="form-control"
                                        placeholder="López" value="{{ old('apellido_materno') }}">
                             </div>
