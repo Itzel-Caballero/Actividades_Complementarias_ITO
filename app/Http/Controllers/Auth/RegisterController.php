@@ -64,17 +64,48 @@ class RegisterController extends Controller
             $rules['id_carrera']  = ['required', 'exists:carrera,id_carrera'];
             // num_control: varchar(9), único en tabla alumno
             // Formatos válidos: 8 dígitos (22169853) o C + 8 dígitos (C22168365)
+            $anioActual     = (int) now()->year;
+            $anioMaximo2dig = $anioActual % 100;          // ej. 2026 → 26
+            $mesActual      = (int) now()->month;
+
             $rules['num_control'] = [
                 'required',
                 'string',
                 'max:9',
                 'regex:/^C?\d{8}$/',
                 Rule::unique('alumno', 'num_control'),
+                // Regla personalizada: año de ingreso válido + semestre ≤ 12
+                function ($attribute, $value, $fail) use ($anioActual, $anioMaximo2dig, $mesActual) {
+                    $digits     = preg_replace('/\D/', '', $value);
+                    $anio2dig   = (int) substr($digits, 0, 2);
+                    $anioIngreso = 2000 + $anio2dig;
+
+                    // 1) El año de ingreso no puede ser futuro
+                    if ($anio2dig > $anioMaximo2dig) {
+                        $fail("El número de control no es válido: el año de ingreso ({$anio2dig}) no puede ser mayor al año actual ({$anioMaximo2dig}).");
+                        return;
+                    }
+
+                    // 2) Calcular semestres cursados y verificar que no excedan 12
+                    if ($mesActual >= 8) {
+                        $halfYears = ($anioActual - $anioIngreso) * 2;
+                    } elseif ($mesActual >= 2) {
+                        $halfYears = ($anioActual - $anioIngreso) * 2 - 1;
+                    } else {
+                        $halfYears = ($anioActual - 1 - $anioIngreso) * 2;
+                    }
+                    $semestre = max(1, $halfYears + 1);
+
+                    if ($semestre > 12) {
+                        $aniosTranscurridos = $anioActual - $anioIngreso;
+                        $fail("El número de control indica un ingreso en {$anioIngreso} ({$aniosTranscurridos} años), lo que excede los 12 semestres permitidos. Verifica tu número de control.");
+                    }
+                },
             ];
 
             $messages['num_control.required'] = 'El número de control es obligatorio.';
             $messages['num_control.max']       = 'El número de control no puede tener más de 9 caracteres.';
-            $messages['num_control.regex']     = 'El número de control debe ser de 8 dígitos (Ej: 22169853) o iniciar con "C" seguido de 8 dígitos (Ej: C22168365).';
+            $messages['num_control.regex']     = "El número de control debe ser de 8 dígitos (Ej: {$anioMaximo2dig}169853) o iniciar con \"C\" seguido de 8 dígitos (Ej: C{$anioMaximo2dig}168365).";
             $messages['num_control.unique']    = 'Este número de control ya está registrado en el sistema.';
             $messages['id_carrera.required']   = 'Debes seleccionar tu carrera.';
             $messages['id_carrera.exists']     = 'La carrera seleccionada no es válida.';
